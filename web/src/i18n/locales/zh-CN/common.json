@@ -1,0 +1,92 @@
+{
+  "appName": "Insighter",
+  "appDescription": "一个用于观察系统行为、采集器状态与本地事件轨迹的工作台。",
+  "workspace": "工作台",
+  "localApi": "本地 API",
+  "all": "全部",
+  "yes": "是",
+  "no": "否",
+  "refresh": "刷新",
+  "lastUpdated": "最近刷新",
+  "notYet": "尚未刷新",
+  "loading": "加载中",
+  "save": "保存",
+  "cancel": "取消",
+  "close": "关闭",
+  "enabled": "已启用",
+  "disabled": "已禁用",
+  "unknown": "未知",
+  "sensitive": "敏感",
+  "filters": "筛选条件",
+  "overview": "概览",
+  "rawJson": "原始 JSON",
+  "apiHealth": {
+    "checking": "检查中",
+    "online": "已连接",
+    "offline": "已断开"
+  },
+  "collectorStatus": {
+    "Disabled": "已禁用",
+    "Starting": "启动中",
+    "Running": "运行中",
+    "Stopping": "停止中",
+    "Faulted": "故障",
+    "Unsupported": "不支持"
+  },
+  "collectorCapability": {
+    "Supported": "支持",
+    "PartiallySupported": "部分支持",
+    "Unsupported": "不支持"
+  },
+  "severity": {
+    "Information": "信息",
+    "Warning": "警告",
+    "Error": "错误"
+  },
+  "clipboardModes": {
+    "Off": "关闭",
+    "MetadataOnly": "仅元数据",
+    "Preview": "预览",
+    "FullText": "全文"
+  },
+  "collectorNames": {
+    "systemLifecycle": "系统生命周期",
+    "sessionState": "会话状态",
+    "foregroundWindow": "前台窗口",
+    "idle": "空闲状态",
+    "clipboard": "剪贴板",
+    "processLifecycle": "进程生命周期",
+    "power": "电源",
+    "networkConnectivity": "网络连通性"
+  },
+  "eventTypes": {
+    "systemStartup": "系统启动",
+    "systemShutdown": "系统关闭",
+    "systemSleep": "系统休眠",
+    "systemResumed": "系统恢复",
+    "sessionLocked": "会话锁定",
+    "sessionUnlocked": "会话解锁",
+    "windowActivated": "窗口切换",
+    "userIdleStarted": "用户开始空闲",
+    "userIdleEnded": "用户结束空闲",
+    "clipboardChanged": "剪贴板变化",
+    "processStarted": "进程启动",
+    "processExited": "进程退出",
+    "powerSourceChanged": "电源来源变化",
+    "powerChargingStateChanged": "充电状态变化",
+    "powerBatteryLevelChanged": "电池电量变化",
+    "networkOnline": "网络已连接",
+    "networkOffline": "网络已断开",
+    "networkActiveNetworkChanged": "活动网络已切换"
+  },
+  "toast": {
+    "collectorStarted": "采集器已启动",
+    "collectorStopped": "采集器已停止",
+    "collectorSaved": "采集器配置已保存",
+    "settingsSaved": "设置已保存"
+  },
+  "languages": {
+    "en": "English",
+    "zh-CN": "中文"
+  }
+}

@@ -1,0 +1,42 @@
+{
+  "eyebrow": "Capture fleet",
+  "title": "Control the collectors that feed the event pipeline",
+  "description": "Review support levels, runtime status, and heartbeat freshness. Configure each collector with guardrails instead of editing raw JSON in the backend.",
+  "capabilities": "Platform capabilities",
+  "empty": {
+    "title": "No collectors loaded",
+    "description": "The host did not return any collectors. Confirm the backend is running and initialized."
+  },
+  "actions": {
+    "start": "Start",
+    "stop": "Stop",
+    "configure": "Configure"
+  },
+  "card": {
+    "lastHeartbeat": "Last heartbeat",
+    "latestError": "Latest error",
+    "version": "Config version"
+  },
+  "sheet": {
+    "title": "Collector configuration",
+    "description": "Adjust capture behavior and persistence-safe settings for the selected collector."
+  },
+  "fields": {
+    "titleMaxLength": "Window title max length",
+    "processBlacklist": "Process blacklist",
+    "idleThresholdSeconds": "Idle threshold seconds",
+    "ignoreWhileLocked": "Ignore while locked",
+    "captureMode": "Clipboard capture mode",
+    "maxContentLength": "Clipboard max content length",
+    "textOnly": "Text only",
+    "captureExecutablePath": "Capture executable path",
+    "ignoreCurrentProcess": "Ignore current Insighter process",
+    "ignoreSystemProcesses": "Ignore built-in system processes",
+    "batteryLevelStepPercent": "Battery level step percent",
+    "reportPowerSourceChanges": "Report power source changes",
+    "reportChargingStateChanges": "Report charging state changes",
+    "reportBatteryLevelChanges": "Report battery level changes",
+    "pollIntervalSeconds": "Poll interval seconds",
+    "reportActiveNetworkChanges": "Report active network changes"
+  }
+}

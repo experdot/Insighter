@@ -1,0 +1,21 @@
+{
+  "eyebrow": "Retention and privacy",
+  "title": "Tune how the local host stores and exposes sensitive data",
+  "description": "Adjust runtime-safe defaults and review read-only operational settings returned by the backend.",
+  "editable": "Editable settings",
+  "readonly": "Read-only system info",
+  "privacy": "Privacy notes",
+  "privacyDescription": "Clipboard previews and window titles are already redacted before persistence. These defaults only affect future events.",
+  "fields": {
+    "retentionDays": "Retention days",
+    "defaultClipboardMode": "Default clipboard mode",
+    "defaultClipboardMaxLength": "Default clipboard max length",
+    "defaultWindowTitleMaxLength": "Default window title max length",
+    "windowProcessBlacklist": "Window process blacklist",
+    "databasePath": "Database path",
+    "apiUrls": "API URLs",
+    "queueCapacity": "Queue capacity",
+    "queryMaxPageSize": "Query max page size",
+    "autoStartCollectors": "Auto start collectors"
+  }
+}

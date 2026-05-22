@@ -1,0 +1,26 @@
+{
+  "eyebrow": "Behavior overview",
+  "title": "Observe what the machine is actually doing",
+  "description": "Track event volume, active periods, clipboard churn, and collector health without leaving the local device.",
+  "range24h": "Last 24h",
+  "range7d": "Last 7d",
+  "totalEvents": "Total events",
+  "windowActivations": "Window activations",
+  "clipboardChanges": "Clipboard changes",
+  "idlePeriods": "Idle periods",
+  "idleDuration": "Idle duration",
+  "timeline": "Timeline",
+  "timelineDescription": "UTC buckets rendered in local time for quick triage.",
+  "eventDistribution": "Event distribution",
+  "collectorHealth": "Collector health",
+  "collectorHealthDescription": "Platform support and runtime state, refreshed every 15 seconds.",
+  "health": {
+    "lastHeartbeat": "Last heartbeat",
+    "enabled": "Enabled",
+    "reason": "Reason"
+  },
+  "empty": {
+    "title": "No events yet",
+    "description": "The host is running, but no events have been collected. Check whether collectors are enabled and active."
+  }
+}

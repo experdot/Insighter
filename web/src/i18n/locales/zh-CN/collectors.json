@@ -1,0 +1,42 @@
+{
+  "eyebrow": "采集编队",
+  "title": "管理进入事件管道的各个采集器",
+  "description": "查看能力支持、运行状态和心跳新鲜度。通过前端表单调整采集行为，而不是直接改后端 JSON。",
+  "capabilities": "平台能力",
+  "empty": {
+    "title": "没有可用采集器",
+    "description": "后端没有返回采集器列表。请确认宿主已经启动且初始化完成。"
+  },
+  "actions": {
+    "start": "启动",
+    "stop": "停止",
+    "configure": "配置"
+  },
+  "card": {
+    "lastHeartbeat": "最近心跳",
+    "latestError": "最近错误",
+    "version": "配置版本"
+  },
+  "sheet": {
+    "title": "采集器配置",
+    "description": "调整选中采集器的采集行为与安全边界。"
+  },
+  "fields": {
+    "titleMaxLength": "窗口标题最大长度",
+    "processBlacklist": "进程黑名单",
+    "idleThresholdSeconds": "空闲阈值秒数",
+    "ignoreWhileLocked": "锁屏时忽略",
+    "captureMode": "剪贴板采集模式",
+    "maxContentLength": "剪贴板最大内容长度",
+    "textOnly": "仅文本",
+    "captureExecutablePath": "采集可执行文件路径",
+    "ignoreCurrentProcess": "忽略当前 Insighter 进程",
+    "ignoreSystemProcesses": "忽略内置系统进程",
+    "batteryLevelStepPercent": "电量步进百分比",
+    "reportPowerSourceChanges": "上报电源来源变化",
+    "reportChargingStateChanges": "上报充电状态变化",
+    "reportBatteryLevelChanges": "上报电池电量变化",
+    "pollIntervalSeconds": "轮询间隔秒数",
+    "reportActiveNetworkChanges": "上报活动网络切换"
+  }
+}

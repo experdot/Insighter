@@ -1,0 +1,42 @@
+{
+  "eyebrow": "Search trail",
+  "title": "Inspect structured event history",
+  "description": "Filter by time, event family, severity, session, and collector. Open any row to inspect normalized fields and raw JSON.",
+  "empty": {
+    "title": "No matching logs",
+    "description": "Try widening the time range or removing one of the active filters."
+  },
+  "columns": {
+    "time": "Time",
+    "eventType": "Event type",
+    "collector": "Collector",
+    "severity": "Severity",
+    "session": "Session",
+    "machine": "Machine",
+    "summary": "Summary"
+  },
+  "totalItems": "items",
+  "filters": {
+    "from": "From (local)",
+    "to": "To (local)",
+    "eventType": "Event type",
+    "collector": "Collector",
+    "severity": "Severity",
+    "session": "Session",
+    "machine": "Machine",
+    "pageSize": "Page size",
+    "reset": "Reset"
+  },
+  "details": {
+    "title": "Log details",
+    "collector": "Collector",
+    "severity": "Severity",
+    "session": "Session",
+    "machine": "Machine"
+  },
+  "pagination": {
+    "page": "Page {{page}} / {{total}}",
+    "prev": "Prev",
+    "next": "Next"
+  }
+}

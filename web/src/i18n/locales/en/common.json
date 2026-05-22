@@ -1,0 +1,92 @@
+{
+  "appName": "Insighter",
+  "appDescription": "A local observability desk for system activity, collector health, and private event trails.",
+  "workspace": "Workspace",
+  "localApi": "Local API",
+  "all": "All",
+  "yes": "Yes",
+  "no": "No",
+  "refresh": "Refresh",
+  "lastUpdated": "Last updated",
+  "notYet": "Not yet",
+  "loading": "Loading",
+  "save": "Save",
+  "cancel": "Cancel",
+  "close": "Close",
+  "enabled": "Enabled",
+  "disabled": "Disabled",
+  "unknown": "Unknown",
+  "sensitive": "Sensitive",
+  "filters": "Filters",
+  "overview": "Overview",
+  "rawJson": "Raw JSON",
+  "apiHealth": {
+    "checking": "Checking",
+    "online": "Connected",
+    "offline": "Disconnected"
+  },
+  "collectorStatus": {
+    "Disabled": "Disabled",
+    "Starting": "Starting",
+    "Running": "Running",
+    "Stopping": "Stopping",
+    "Faulted": "Faulted",
+    "Unsupported": "Unsupported"
+  },
+  "collectorCapability": {
+    "Supported": "Supported",
+    "PartiallySupported": "Partial",
+    "Unsupported": "Unsupported"
+  },
+  "severity": {
+    "Information": "Info",
+    "Warning": "Warning",
+    "Error": "Error"
+  },
+  "clipboardModes": {
+    "Off": "Off",
+    "MetadataOnly": "Metadata only",
+    "Preview": "Preview",
+    "FullText": "Full text"
+  },
+  "collectorNames": {
+    "systemLifecycle": "System lifecycle",
+    "sessionState": "Session state",
+    "foregroundWindow": "Foreground window",
+    "idle": "Idle state",
+    "clipboard": "Clipboard",
+    "processLifecycle": "Process lifecycle",
+    "power": "Power",
+    "networkConnectivity": "Network connectivity"
+  },
+  "eventTypes": {
+    "systemStartup": "System startup",
+    "systemShutdown": "System shutdown",
+    "systemSleep": "System sleep",
+    "systemResumed": "System resumed",
+    "sessionLocked": "Session locked",
+    "sessionUnlocked": "Session unlocked",
+    "windowActivated": "Window activated",
+    "userIdleStarted": "User idle started",
+    "userIdleEnded": "User idle ended",
+    "clipboardChanged": "Clipboard changed",
+    "processStarted": "Process started",
+    "processExited": "Process exited",
+    "powerSourceChanged": "Power source changed",
+    "powerChargingStateChanged": "Power charging state changed",
+    "powerBatteryLevelChanged": "Power battery level changed",
+    "networkOnline": "Network online",
+    "networkOffline": "Network offline",
+    "networkActiveNetworkChanged": "Active network changed"
+  },
+  "toast": {
+    "collectorStarted": "Collector started",
+    "collectorStopped": "Collector stopped",
+    "collectorSaved": "Collector configuration saved",
+    "settingsSaved": "Settings saved"
+  },
+  "languages": {
+    "en": "English",
+    "zh-CN": "中文"
+  }
+}

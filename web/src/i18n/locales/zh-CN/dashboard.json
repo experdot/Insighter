@@ -1,0 +1,26 @@
+{
+  "eyebrow": "行为概览",
+  "title": "直接观察这台机器正在发生什么",
+  "description": "查看事件总量、活跃时间段、剪贴板变化、空闲情况与采集器健康状态，所有数据都来自本地宿主。",
+  "range24h": "最近 24 小时",
+  "range7d": "最近 7 天",
+  "totalEvents": "事件总数",
+  "windowActivations": "窗口切换",
+  "clipboardChanges": "剪贴板变更",
+  "idlePeriods": "空闲次数",
+  "idleDuration": "空闲时长",
+  "timeline": "时间线",
+  "timelineDescription": "按 UTC 聚合，但以本地时间展示，方便排查。",
+  "eventDistribution": "事件分布",
+  "collectorHealth": "采集器健康状态",
+  "collectorHealthDescription": "平台能力与运行状态，每 15 秒自动刷新。",
+  "health": {
+    "lastHeartbeat": "最近心跳",
+    "enabled": "启用状态",
+    "reason": "原因"
+  },
+  "empty": {
+    "title": "还没有采集到事件",
+    "description": "宿主已经启动，但还没有数据。请先检查采集器是否启用并处于运行状态。"
+  }
+}

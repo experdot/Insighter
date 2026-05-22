@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+  <ItemGroup>
+    <ProjectReference Include="..\Insighter.Application\Insighter.Application.csproj" />
+    <ProjectReference Include="..\Insighter.Contracts\Insighter.Contracts.csproj" />
+    <ProjectReference Include="..\Insighter.Infrastructure.Persistence\Insighter.Infrastructure.Persistence.csproj" />
+    <ProjectReference Include="..\Insighter.Infrastructure.Platform.Windows\Insighter.Infrastructure.Platform.Windows.csproj" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+</Project>

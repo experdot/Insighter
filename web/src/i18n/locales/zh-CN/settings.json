@@ -1,0 +1,21 @@
+{
+  "eyebrow": "保留与隐私",
+  "title": "调整本地宿主如何存储和暴露敏感数据",
+  "description": "修改运行时安全默认值，并查看后端返回的只读系统配置。",
+  "editable": "可编辑设置",
+  "readonly": "只读系统信息",
+  "privacy": "隐私说明",
+  "privacyDescription": "剪贴板预览和窗口标题在入库前已经脱敏。这里修改的是后续新事件的默认行为。",
+  "fields": {
+    "retentionDays": "保留天数",
+    "defaultClipboardMode": "默认剪贴板模式",
+    "defaultClipboardMaxLength": "默认剪贴板最大长度",
+    "defaultWindowTitleMaxLength": "默认窗口标题最大长度",
+    "windowProcessBlacklist": "窗口进程黑名单",
+    "databasePath": "数据库路径",
+    "apiUrls": "API 地址",
+    "queueCapacity": "队列容量",
+    "queryMaxPageSize": "查询最大分页",
+    "autoStartCollectors": "自动启动采集器"
+  }
+}
