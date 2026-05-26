@@ -67,15 +67,7 @@ public sealed record SettingsResponse(
     int QueueCapacity,
     int RetentionDays,
     int QueryMaxPageSize,
-    string DefaultClipboardMode,
-    int DefaultClipboardMaxLength,
-    int DefaultWindowTitleMaxLength,
-    IReadOnlyList<string> WindowProcessBlacklist,
     bool AutoStartCollectors);
 
 public sealed record SettingsUpdateRequest(
-    int? RetentionDays,
-    string? DefaultClipboardMode,
-    int? DefaultClipboardMaxLength,
-    int? DefaultWindowTitleMaxLength,
-    IReadOnlyList<string>? WindowProcessBlacklist);
+    int? RetentionDays);

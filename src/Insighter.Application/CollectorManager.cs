@@ -72,7 +72,7 @@ public sealed class CollectorManager : ICollectorManager
                         true,
                         1,
                         _clock.UtcNow,
-                        CollectorConfigDefaults.BuildSettingsJson(runtime.Collector.CollectorId, settings));
+                        CollectorConfigDefaults.BuildSettingsJson(runtime.Collector.CollectorId));
 
                 runtime.State = states.GetValueOrDefault(runtime.Collector.CollectorId) ??
                     new CollectorState(runtime.Collector.CollectorId, CollectorStatus.Disabled, null, null, _clock.UtcNow);

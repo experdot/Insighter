@@ -119,6 +119,122 @@ public sealed class WindowsCollectorTests
     }
 
     [Fact]
+    public async Task ForegroundWindowCollector_Redacts_Blacklisted_Process_And_Trims_Allowed_Titles()
+    {
+        var sink = new RecordingEventSink();
+        var clock = new ManualClock(DateTimeOffset.Parse("2026-01-01T00:00:00Z"));
+        var monitor = new TestForegroundWindowMonitor(new ForegroundWindowSnapshot((nint)1, 42, "Code.exe", "Secret document"));
+        var collector = new ForegroundWindowCollector(
+            sink,
+            clock,
+            new TestMachineContextProvider(),
+            new TestUserSessionContextProvider(),
+            monitor,
+            NullLogger<ForegroundWindowCollector>.Instance);
+
+        await collector.StartAsync(
+            new CollectorConfig(
+                CollectorIds.ForegroundWindow,
+                true,
+                1,
+                clock.UtcNow,
+                JsonHelpers.Serialize(new
+                {
+                    titleMaxLength = 5,
+                    processBlacklist = new[] { "code" },
+                })),
+            CancellationToken.None);
+
+        var redacted = await sink.ReadAsync();
+        var redactedData = GetData(redacted);
+        Assert.Equal(EventTypes.WindowActivated, redacted.EventType);
+        Assert.Equal("[REDACTED]", redactedData["windowTitle"]?.GetValue<string>());
+        Assert.Equal(true, redactedData["redacted"]?.GetValue<bool>());
+        Assert.Null(redactedData["windowTitleHash"]);
+
+        monitor.SetCurrent(new ForegroundWindowSnapshot((nint)2, 84, "notepad.exe", "abcdef"));
+        var trimmed = await sink.ReadAsync();
+        var trimmedData = GetData(trimmed);
+        Assert.Equal("abcde", trimmedData["windowTitle"]?.GetValue<string>());
+        Assert.Null(trimmedData["redacted"]);
+        Assert.NotNull(trimmedData["windowTitleHash"]?.GetValue<string>());
+
+        await collector.StopAsync(CancellationToken.None);
+    }
+
+    [Fact]
+    public async Task ClipboardCollector_Respects_TextOnly_And_CaptureMode()
+    {
+        var sink = new RecordingEventSink();
+        var clock = new ManualClock(DateTimeOffset.Parse("2026-01-01T00:00:00Z"));
+        var monitor = new TestClipboardMonitor(new ClipboardSnapshot(1, false, null));
+        var collector = new ClipboardCollector(
+            sink,
+            clock,
+            new TestMachineContextProvider(),
+            new TestUserSessionContextProvider(),
+            monitor,
+            NullLogger<ClipboardCollector>.Instance);
+
+        await collector.StartAsync(
+            new CollectorConfig(
+                CollectorIds.Clipboard,
+                true,
+                1,
+                clock.UtcNow,
+                JsonHelpers.Serialize(new
+                {
+                    captureMode = nameof(ClipboardCaptureMode.Preview),
+                    maxContentLength = 4,
+                    textOnly = true,
+                })),
+            CancellationToken.None);
+
+        await Task.Delay(800);
+        Assert.False(sink.TryRead(out _));
+
+        monitor.SetCurrent(new ClipboardSnapshot(2, true, "abcdef"));
+        var previewEvent = await sink.ReadAsync();
+        var previewData = GetData(previewEvent);
+        Assert.Equal(EventTypes.ClipboardChanged, previewEvent.EventType);
+        Assert.Equal(nameof(ClipboardCaptureMode.Preview), previewData["captureMode"]?.GetValue<string>());
+        Assert.Equal("abcd", previewData["preview"]?.GetValue<string>());
+        Assert.Null(previewData["text"]);
+        Assert.NotNull(previewData["textHash"]?.GetValue<string>());
+
+        await collector.UpdateConfigAsync(
+            new CollectorConfig(
+                CollectorIds.Clipboard,
+                true,
+                2,
+                clock.UtcNow,
+                JsonHelpers.Serialize(new
+                {
+                    captureMode = nameof(ClipboardCaptureMode.FullText),
+                    maxContentLength = 3,
+                    textOnly = false,
+                })),
+            CancellationToken.None);
+
+        monitor.SetCurrent(new ClipboardSnapshot(3, false, null));
+        var nonTextEvent = await sink.ReadAsync();
+        var nonTextData = GetData(nonTextEvent);
+        Assert.Equal(false, nonTextData["hasText"]?.GetValue<bool>());
+        Assert.Equal(nameof(ClipboardCaptureMode.FullText), nonTextData["captureMode"]?.GetValue<string>());
+        Assert.Null(nonTextData["preview"]);
+        Assert.Null(nonTextData["text"]);
+        Assert.Null(nonTextData["textHash"]);
+
+        monitor.SetCurrent(new ClipboardSnapshot(4, true, "xyz123"));
+        var fullTextEvent = await sink.ReadAsync();
+        var fullTextData = GetData(fullTextEvent);
+        Assert.Equal("xyz", fullTextData["text"]?.GetValue<string>());
+        Assert.Null(fullTextData["preview"]);
+
+        await collector.StopAsync(CancellationToken.None);
+    }
+
+    [Fact]
     public async Task PowerCollector_Only_Emits_When_Battery_Step_Is_Crossed()
     {
         var sink = new RecordingEventSink();
@@ -353,6 +469,42 @@ public sealed class WindowsCollectorTests
 
         public ValueTask<ProcessLifecycleNotification> WaitForNextAsync(CancellationToken cancellationToken)
             => _notifications.Reader.ReadAsync(cancellationToken);
+    }
+
+    private sealed class TestForegroundWindowMonitor : IForegroundWindowMonitor
+    {
+        private ForegroundWindowSnapshot? _current;
+
+        public TestForegroundWindowMonitor(ForegroundWindowSnapshot? current)
+        {
+            _current = current;
+        }
+
+        public void SetCurrent(ForegroundWindowSnapshot? current)
+        {
+            _current = current;
+        }
+
+        public ValueTask<ForegroundWindowSnapshot?> GetCurrentAsync(CancellationToken cancellationToken)
+            => ValueTask.FromResult(_current);
+    }
+
+    private sealed class TestClipboardMonitor : IClipboardMonitor
+    {
+        private ClipboardSnapshot? _current;
+
+        public TestClipboardMonitor(ClipboardSnapshot? current)
+        {
+            _current = current;
+        }
+
+        public void SetCurrent(ClipboardSnapshot? current)
+        {
+            _current = current;
+        }
+
+        public ValueTask<ClipboardSnapshot?> GetCurrentAsync(CancellationToken cancellationToken)
+            => ValueTask.FromResult(_current);
     }
 
     private sealed class TestPowerStatusMonitor : IPowerStatusMonitor

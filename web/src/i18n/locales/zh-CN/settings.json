@@ -1,15 +1,9 @@
 {
   "title": "设置",
-  "editable": "可编辑设置",
-  "readonly": "系统信息",
-  "privacy": "说明",
-  "privacyDescription": "仅影响新事件。",
+  "editable": "保留策略",
+  "readonly": "系统",
   "fields": {
     "retentionDays": "保留天数",
-    "defaultClipboardMode": "默认剪贴板模式",
-    "defaultClipboardMaxLength": "默认剪贴板最大长度",
-    "defaultWindowTitleMaxLength": "默认窗口标题最大长度",
-    "windowProcessBlacklist": "窗口进程黑名单",
     "databasePath": "数据库路径",
     "apiUrls": "API 地址",
     "queueCapacity": "队列容量",

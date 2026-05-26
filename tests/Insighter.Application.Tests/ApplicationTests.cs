@@ -1,6 +1,5 @@
 using Insighter.Application;
 using Insighter.Domain;
-using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 using System.Text.Json.Nodes;
 
@@ -43,19 +42,10 @@ public sealed class ApplicationTests
     }
 
     [Fact]
-    public async Task RedactionService_Truncates_Window_Title_And_Clipboard_Content()
+    public async Task DefaultRedactionService_Returns_Event_Unchanged()
     {
-        var repository = new InMemoryAppSettingsRepository(new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
-        {
-            [SettingsKeys.DefaultWindowTitleMaxLength] = "5",
-            [SettingsKeys.DefaultClipboardMaxLength] = "4",
-            [SettingsKeys.DefaultClipboardMode] = nameof(ClipboardCaptureMode.Preview),
-        });
-
-        var settingsService = new SettingsService(repository, Options.Create(new InsighterOptions()));
-        var service = new DefaultRedactionService(settingsService, NullLogger<DefaultRedactionService>.Instance);
-
-        var windowEvent = new LogEvent(
+        var service = new DefaultRedactionService();
+        var logEvent = new LogEvent(
             Guid.NewGuid(),
             DateTimeOffset.UtcNow,
             EventTypes.WindowActivated,
@@ -65,21 +55,32 @@ public sealed class ApplicationTests
             "machine",
             """{"schemaVersion":1,"platform":"windows","data":{"processName":"code","windowTitle":"abcdef"}}""");
 
-        var clipboardEvent = new LogEvent(
-            Guid.NewGuid(),
-            DateTimeOffset.UtcNow,
-            EventTypes.ClipboardChanged,
-            CollectorIds.Clipboard,
-            EventSeverity.Information,
-            "1",
-            "machine",
-            """{"schemaVersion":1,"platform":"windows","data":{"captureMode":"Preview","preview":"abcdef"}}""");
+        var redacted = await service.RedactAsync(logEvent, CancellationToken.None);
 
-        var redactedWindow = await service.RedactAsync(windowEvent, CancellationToken.None);
-        var redactedClipboard = await service.RedactAsync(clipboardEvent, CancellationToken.None);
+        Assert.Equal(logEvent, redacted);
+    }
 
-        Assert.Contains("abcde", redactedWindow.Content);
-        Assert.Contains("abcd", redactedClipboard.Content);
+    [Fact]
+    public async Task LogRetentionService_Deletes_Events_Older_Than_Retention_Window()
+    {
+        var now = DateTimeOffset.Parse("2026-01-10T00:00:00Z");
+        var repository = new InMemoryLogEventRepository(
+        [
+            new LogEvent(Guid.NewGuid(), now.AddDays(-10), EventTypes.SystemStartup, CollectorIds.SystemLifecycle, EventSeverity.Information, "1", "m", """{"schemaVersion":1,"platform":"windows","data":{}}"""),
+            new LogEvent(Guid.NewGuid(), now.AddDays(-2), EventTypes.SystemStartup, CollectorIds.SystemLifecycle, EventSeverity.Information, "1", "m", """{"schemaVersion":1,"platform":"windows","data":{}}"""),
+        ]);
+        var settingsRepository = new InMemoryAppSettingsRepository(new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+        {
+            [SettingsKeys.RetentionDays] = "7",
+        });
+        var settingsService = new SettingsService(settingsRepository, Options.Create(new InsighterOptions()));
+        var service = new LogRetentionService(repository, settingsService, new ManualClock(now));
+
+        var deleted = await service.DeleteExpiredAsync(CancellationToken.None);
+
+        Assert.Equal(1, deleted);
+        Assert.Single(repository.Events);
+        Assert.Equal(now.AddDays(-2), repository.Events[0].OccurredAtUtc);
     }
 
     [Fact]
@@ -106,26 +107,23 @@ public sealed class ApplicationTests
     [Fact]
     public void CollectorConfigDefaults_Builds_Defaults_For_NewCollectors()
     {
-        var settings = new AppSettingsSnapshot(
-            "db",
-            "http://127.0.0.1:5078",
-            4096,
-            30,
-            500,
-            ClipboardCaptureMode.Preview,
-            200,
-            200,
-            [],
-            true);
+        var foregroundSettings = JsonNode.Parse(CollectorConfigDefaults.BuildSettingsJson(CollectorIds.ForegroundWindow)) as JsonObject;
+        var clipboardSettings = JsonNode.Parse(CollectorConfigDefaults.BuildSettingsJson(CollectorIds.Clipboard)) as JsonObject;
+        var processSettings = JsonNode.Parse(CollectorConfigDefaults.BuildSettingsJson(CollectorIds.ProcessLifecycle)) as JsonObject;
+        var powerSettings = JsonNode.Parse(CollectorConfigDefaults.BuildSettingsJson(CollectorIds.Power)) as JsonObject;
+        var networkSettings = JsonNode.Parse(CollectorConfigDefaults.BuildSettingsJson(CollectorIds.NetworkConnectivity)) as JsonObject;
 
-        var processSettings = JsonNode.Parse(CollectorConfigDefaults.BuildSettingsJson(CollectorIds.ProcessLifecycle, settings)) as JsonObject;
-        var powerSettings = JsonNode.Parse(CollectorConfigDefaults.BuildSettingsJson(CollectorIds.Power, settings)) as JsonObject;
-        var networkSettings = JsonNode.Parse(CollectorConfigDefaults.BuildSettingsJson(CollectorIds.NetworkConnectivity, settings)) as JsonObject;
-
+        Assert.NotNull(foregroundSettings);
+        Assert.NotNull(clipboardSettings);
         Assert.NotNull(processSettings);
         Assert.NotNull(powerSettings);
         Assert.NotNull(networkSettings);
 
+        Assert.Equal(200, foregroundSettings!["titleMaxLength"]?.GetValue<int>());
+        Assert.Equal(0, foregroundSettings["processBlacklist"]?.AsArray().Count);
+        Assert.Equal(nameof(ClipboardCaptureMode.Preview), clipboardSettings!["captureMode"]?.GetValue<string>());
+        Assert.Equal(200, clipboardSettings["maxContentLength"]?.GetValue<int>());
+        Assert.Equal(true, clipboardSettings["textOnly"]?.GetValue<bool>());
         Assert.Equal(true, processSettings!["captureExecutablePath"]?.GetValue<bool>());
         Assert.Equal(true, processSettings["ignoreCurrentProcess"]?.GetValue<bool>());
         Assert.Equal(5, powerSettings!["batteryLevelStepPercent"]?.GetValue<int>());
@@ -136,19 +134,19 @@ public sealed class ApplicationTests
 
     private sealed class InMemoryAppSettingsRepository : IAppSettingsRepository
     {
-        private readonly Dictionary<string, string> _values;
-
         public InMemoryAppSettingsRepository(Dictionary<string, string> values)
         {
-            _values = values;
+            Values = values;
         }
 
+        public Dictionary<string, string> Values { get; }
+
         public Task<IReadOnlyDictionary<string, string>> GetAllAsync(CancellationToken cancellationToken)
-            => Task.FromResult((IReadOnlyDictionary<string, string>)_values);
+            => Task.FromResult((IReadOnlyDictionary<string, string>)Values);
 
         public Task UpsertAsync(string key, string value, CancellationToken cancellationToken)
         {
-            _values[key] = value;
+            Values[key] = value;
             return Task.CompletedTask;
         }
 
@@ -156,7 +154,7 @@ public sealed class ApplicationTests
         {
             foreach (var pair in values)
             {
-                _values[pair.Key] = pair.Value;
+                Values[pair.Key] = pair.Value;
             }
 
             return Task.CompletedTask;
@@ -165,23 +163,42 @@ public sealed class ApplicationTests
 
     private sealed class InMemoryLogEventRepository : ILogEventRepository
     {
-        private readonly IReadOnlyList<LogEvent> _events;
-
         public InMemoryLogEventRepository(IReadOnlyList<LogEvent> events)
         {
-            _events = events;
+            Events = events.ToList();
         }
 
+        public List<LogEvent> Events { get; }
+
         public Task InsertBatchAsync(IReadOnlyCollection<LogEvent> events, CancellationToken cancellationToken)
-            => Task.CompletedTask;
+        {
+            Events.AddRange(events);
+            return Task.CompletedTask;
+        }
 
         public Task<PagedResult<LogEvent>> SearchAsync(LogQueryFilter filter, CancellationToken cancellationToken)
-            => Task.FromResult(new PagedResult<LogEvent>(_events, 1, _events.Count, _events.Count));
+            => Task.FromResult(new PagedResult<LogEvent>(Events, 1, Events.Count, Events.Count));
 
         public Task<LogEvent?> GetByIdAsync(Guid id, CancellationToken cancellationToken)
-            => Task.FromResult(_events.FirstOrDefault(x => x.Id == id));
+            => Task.FromResult(Events.FirstOrDefault(x => x.Id == id));
 
         public Task<IReadOnlyList<LogEvent>> GetRangeAsync(DateTimeOffset fromUtc, DateTimeOffset toUtc, CancellationToken cancellationToken)
-            => Task.FromResult((IReadOnlyList<LogEvent>)_events.Where(x => x.OccurredAtUtc >= fromUtc && x.OccurredAtUtc <= toUtc).ToArray());
+            => Task.FromResult((IReadOnlyList<LogEvent>)Events.Where(x => x.OccurredAtUtc >= fromUtc && x.OccurredAtUtc <= toUtc).ToArray());
+
+        public Task<int> DeleteOlderThanAsync(DateTimeOffset thresholdUtc, CancellationToken cancellationToken)
+        {
+            var deleted = Events.RemoveAll(x => x.OccurredAtUtc < thresholdUtc);
+            return Task.FromResult(deleted);
+        }
+    }
+
+    private sealed class ManualClock : IClock
+    {
+        public ManualClock(DateTimeOffset utcNow)
+        {
+            UtcNow = utcNow;
+        }
+
+        public DateTimeOffset UtcNow { get; }
     }
 }

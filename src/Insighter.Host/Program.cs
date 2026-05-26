@@ -179,26 +179,6 @@ app.MapPut("/api/settings", async (SettingsUpdateRequest request, ISettingsServi
         updates[SettingsKeys.RetentionDays] = request.RetentionDays.Value.ToString();
     }
 
-    if (!string.IsNullOrWhiteSpace(request.DefaultClipboardMode))
-    {
-        updates[SettingsKeys.DefaultClipboardMode] = request.DefaultClipboardMode;
-    }
-
-    if (request.DefaultClipboardMaxLength.HasValue)
-    {
-        updates[SettingsKeys.DefaultClipboardMaxLength] = request.DefaultClipboardMaxLength.Value.ToString();
-    }
-
-    if (request.DefaultWindowTitleMaxLength.HasValue)
-    {
-        updates[SettingsKeys.DefaultWindowTitleMaxLength] = request.DefaultWindowTitleMaxLength.Value.ToString();
-    }
-
-    if (request.WindowProcessBlacklist is not null)
-    {
-        updates[SettingsKeys.WindowProcessBlacklist] = JsonHelpers.Serialize(request.WindowProcessBlacklist);
-    }
-
     var settings = await service.UpdateAsync(updates, cancellationToken);
     return Results.Ok(ToSettingsResponse(settings));
 });
@@ -261,10 +241,6 @@ static SettingsResponse ToSettingsResponse(AppSettingsSnapshot settings)
         settings.QueueCapacity,
         settings.RetentionDays,
         settings.QueryMaxPageSize,
-        settings.DefaultClipboardMode.ToString(),
-        settings.DefaultClipboardMaxLength,
-        settings.DefaultWindowTitleMaxLength,
-        settings.WindowProcessBlacklist,
         settings.AutoStartCollectors);
 
 public partial class Program

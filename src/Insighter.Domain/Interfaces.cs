@@ -53,6 +53,8 @@ public interface ILogEventRepository
     Task<LogEvent?> GetByIdAsync(Guid id, CancellationToken cancellationToken);
 
     Task<IReadOnlyList<LogEvent>> GetRangeAsync(DateTimeOffset fromUtc, DateTimeOffset toUtc, CancellationToken cancellationToken);
+
+    Task<int> DeleteOlderThanAsync(DateTimeOffset thresholdUtc, CancellationToken cancellationToken);
 }
 
 public interface ICollectorConfigRepository
@@ -111,6 +113,11 @@ public interface ISettingsService
     Task<AppSettingsSnapshot> GetSnapshotAsync(CancellationToken cancellationToken);
 
     Task<AppSettingsSnapshot> UpdateAsync(IReadOnlyDictionary<string, string> values, CancellationToken cancellationToken);
+}
+
+public interface ILogRetentionService
+{
+    Task<int> DeleteExpiredAsync(CancellationToken cancellationToken);
 }
 
 public interface IContentValidator

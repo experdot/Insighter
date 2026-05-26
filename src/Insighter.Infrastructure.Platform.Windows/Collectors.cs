@@ -177,12 +177,15 @@ public sealed class SessionStateCollector : BaseCollector
 
 public sealed class ForegroundWindowCollector : BaseCollector
 {
+    private const string RedactedWindowTitle = "[REDACTED]";
+
     private readonly IEventSink _eventSink;
     private readonly IClock _clock;
     private readonly IMachineContextProvider _machineContextProvider;
     private readonly IUserSessionContextProvider _userSessionContextProvider;
     private readonly IForegroundWindowMonitor _monitor;
     private ForegroundWindowCollectorSettings _settings = new();
+    private HashSet<string> _processBlacklist = new(StringComparer.OrdinalIgnoreCase);
     private string? _lastFingerprint;
 
     public ForegroundWindowCollector(
@@ -209,17 +212,32 @@ public sealed class ForegroundWindowCollector : BaseCollector
             if (snapshot is not null)
             {
                 var title = snapshot.WindowTitle ?? string.Empty;
+                var processName = CollectorHelpers.NormalizeProcessName(snapshot.ProcessName);
+                if (string.IsNullOrWhiteSpace(processName))
+                {
+                    processName = snapshot.ProcessName;
+                }
+
                 var fingerprint = $"{snapshot.ProcessId}:{title}";
                 if (!string.Equals(_lastFingerprint, fingerprint, StringComparison.Ordinal))
                 {
                     _lastFingerprint = fingerprint;
+                    var redacted = _processBlacklist.Contains(processName);
                     var data = new JsonObject
                     {
                         ["processId"] = snapshot.ProcessId,
-                        ["processName"] = snapshot.ProcessName,
-                        ["windowTitle"] = Trim(title, _settings.TitleMaxLength),
-                        ["windowTitleHash"] = ComputeSha256(title),
+                        ["processName"] = processName,
+                        ["windowTitle"] = redacted ? RedactedWindowTitle : Trim(title, _settings.TitleMaxLength),
                     };
+
+                    if (redacted)
+                    {
+                        data["redacted"] = true;
+                    }
+                    else
+                    {
+                        data["windowTitleHash"] = ComputeSha256(title);
+                    }
 
                     await _eventSink.WriteAsync(CreateEvent(EventTypes.WindowActivated, data), cancellationToken);
                 }
@@ -233,6 +251,10 @@ public sealed class ForegroundWindowCollector : BaseCollector
     protected override Task OnConfigUpdatedAsync(CollectorConfig config, CancellationToken cancellationToken)
     {
         _settings = JsonHelpers.Deserialize<ForegroundWindowCollectorSettings>(config.SettingsJson) ?? new ForegroundWindowCollectorSettings();
+        _processBlacklist = _settings.ProcessBlacklist
+            .Select(CollectorHelpers.NormalizeProcessName)
+            .Where(value => !string.IsNullOrWhiteSpace(value))
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
         return Task.CompletedTask;
     }
 
@@ -365,7 +387,6 @@ public sealed class ClipboardCollector : BaseCollector
     private readonly IClipboardMonitor _monitor;
     private ClipboardCollectorSettings _settings = new();
     private uint _lastSequence;
-    private string? _lastTextHash;
 
     public ClipboardCollector(
         IEventSink eventSink,
@@ -394,15 +415,15 @@ public sealed class ClipboardCollector : BaseCollector
 
                 if (TryGetMode(_settings.CaptureMode, out var mode) && mode != ClipboardCaptureMode.Off)
                 {
-                    var text = current.Text ?? string.Empty;
-                    var hash = ComputeSha256(text);
-
-                    if (!string.Equals(hash, _lastTextHash, StringComparison.Ordinal))
+                    if (_settings.TextOnly && !current.HasText)
                     {
-                        _lastTextHash = hash;
-                        var data = BuildClipboardData(current, mode, text, hash);
-                        await _eventSink.WriteAsync(CreateEvent(EventTypes.ClipboardChanged, data), cancellationToken);
+                        TouchHeartbeat();
+                        await Task.Delay(TimeSpan.FromMilliseconds(500), cancellationToken);
+                        continue;
                     }
+
+                    var data = BuildClipboardData(current, mode);
+                    await _eventSink.WriteAsync(CreateEvent(EventTypes.ClipboardChanged, data), cancellationToken);
                 }
             }
 
@@ -417,16 +438,23 @@ public sealed class ClipboardCollector : BaseCollector
         return Task.CompletedTask;
     }
 
-    private JsonObject BuildClipboardData(ClipboardSnapshot snapshot, ClipboardCaptureMode mode, string text, string hash)
+    private JsonObject BuildClipboardData(ClipboardSnapshot snapshot, ClipboardCaptureMode mode)
     {
         var data = new JsonObject
         {
             ["sequenceNumber"] = snapshot.SequenceNumber,
             ["hasText"] = snapshot.HasText,
             ["captureMode"] = mode.ToString(),
-            ["textLength"] = text.Length,
-            ["textHash"] = hash,
         };
+
+        if (!snapshot.HasText)
+        {
+            return data;
+        }
+
+        var text = snapshot.Text ?? string.Empty;
+        data["textLength"] = text.Length;
+        data["textHash"] = ComputeSha256(text);
 
         if (mode == ClipboardCaptureMode.Preview)
         {

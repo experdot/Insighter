@@ -1,32 +1,15 @@
 import { useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
-import { LockKeyhole, TriangleAlert } from 'lucide-react'
+import { TriangleAlert } from 'lucide-react'
 import { EmptyState } from '@/components/shared/EmptyState'
 import { KeyValueList } from '@/components/shared/KeyValueList'
 import { PageHeader } from '@/components/shared/PageHeader'
 import { Button } from '@/components/ui/button'
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
-import { Textarea } from '@/components/ui/textarea'
-import { clipboardCaptureModes } from '@/lib/catalog'
-import { translateClipboardMode } from '@/lib/presenters'
 import { useRefreshStore } from '@/store/refresh'
 import { useSettingsStore } from '@/store/settings-store'
-import type { ClipboardCaptureMode } from '@/types/api'
 
 export function SettingsPage() {
   const { t } = useTranslation(['common', 'settings'])
@@ -48,9 +31,7 @@ export function SettingsPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        title={t('settings:title')}
-      />
+      <PageHeader title={t('settings:title')} />
 
       {error ? (
         <EmptyState
@@ -72,69 +53,7 @@ export function SettingsPage() {
                 type="number"
                 value={form.retentionDays}
                 onChange={(event) => setField('retentionDays', event.target.value)}
-                disabled={loading}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>{t('settings:fields.defaultClipboardMode')}</Label>
-              <Select
-                value={form.defaultClipboardMode}
-                onValueChange={(value) =>
-                  setField('defaultClipboardMode', value as ClipboardCaptureMode)
-                }
-                disabled={loading}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {clipboardCaptureModes.map((item) => (
-                    <SelectItem key={item} value={item}>
-                      {translateClipboardMode(t, item)}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="clipboard-max-length">
-                {t('settings:fields.defaultClipboardMaxLength')}
-              </Label>
-              <Input
-                id="clipboard-max-length"
-                type="number"
-                value={form.defaultClipboardMaxLength}
-                onChange={(event) =>
-                  setField('defaultClipboardMaxLength', event.target.value)
-                }
-                disabled={loading}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="window-title-max-length">
-                {t('settings:fields.defaultWindowTitleMaxLength')}
-              </Label>
-              <Input
-                id="window-title-max-length"
-                type="number"
-                value={form.defaultWindowTitleMaxLength}
-                onChange={(event) =>
-                  setField('defaultWindowTitleMaxLength', event.target.value)
-                }
-                disabled={loading}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="window-blacklist">
-                {t('settings:fields.windowProcessBlacklist')}
-              </Label>
-              <Textarea
-                id="window-blacklist"
-                value={form.windowProcessBlacklist}
-                onChange={(event) =>
-                  setField('windowProcessBlacklist', event.target.value)
-                }
-                disabled={loading}
+                disabled={loading || saving}
               />
             </div>
             <div className="flex justify-end">
@@ -179,22 +98,6 @@ export function SettingsPage() {
               ) : (
                 <div className="text-sm text-muted-foreground">{t('common:loading')}…</div>
               )}
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>{t('settings:privacy')}</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="flex items-start gap-3 rounded-[24px] border border-border/70 bg-card/55 p-4">
-                <div className="rounded-2xl bg-secondary/12 p-3 text-secondary">
-                  <LockKeyhole className="size-5" />
-                </div>
-                <p className="text-sm leading-7 text-muted-foreground">
-                  {t('settings:privacyDescription')}
-                </p>
-              </div>
             </CardContent>
           </Card>
         </div>

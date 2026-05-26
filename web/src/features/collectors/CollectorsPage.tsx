@@ -5,13 +5,7 @@ import { EmptyState } from '@/components/shared/EmptyState'
 import { PageHeader } from '@/components/shared/PageHeader'
 import { StatusBadge } from '@/components/shared/StatusBadge'
 import { Button } from '@/components/ui/button'
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import {
@@ -28,7 +22,16 @@ import {
   SheetHeader,
   SheetTitle,
 } from '@/components/ui/sheet'
+import { Skeleton } from '@/components/ui/skeleton'
 import { Switch } from '@/components/ui/switch'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
 import { Textarea } from '@/components/ui/textarea'
 import { clipboardCaptureModes } from '@/lib/catalog'
 import { formatRelative, formatUtcDateTime, toStringList, toTextareaList } from '@/lib/format'
@@ -173,6 +176,11 @@ export function CollectorsPage() {
     })
   }
 
+  const openCollectorConfig = (collector: CollectorResponse) => {
+    setForm(createCollectorForm(collector))
+    openSheet(collector.collectorId)
+  }
+
   return (
     <div className="space-y-6">
       <PageHeader
@@ -194,80 +202,117 @@ export function CollectorsPage() {
         />
       ) : null}
 
-      <div className="grid gap-5 xl:grid-cols-2">
-        {items.map((collector) => (
-          <Card key={collector.collectorId}>
-            <CardHeader>
-              <div className="flex flex-wrap items-start justify-between gap-3">
-                <div>
-                  <CardTitle>
-                    {translateCollectorId(t, collector.collectorId, collector.displayName)}
-                  </CardTitle>
-                  <CardDescription>{collector.displayName}</CardDescription>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  <StatusBadge
-                    label={translateCollectorStatus(t, collector.status)}
-                    tone={getCollectorStatusTone(collector.status)}
-                  />
-                  <StatusBadge
-                    label={translateCapability(t, collector.capability)}
-                    tone={getCapabilityTone(collector.capability)}
-                  />
-                </div>
+      {items.length > 0 || loading ? (
+        <Card>
+          <CardContent className="p-0">
+            {loading && items.length === 0 ? (
+              <div className="space-y-3 p-4">
+                {Array.from({ length: 6 }).map((_, index) => (
+                  <Skeleton key={index} className="h-14 w-full" />
+                ))}
               </div>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid gap-3 text-sm">
-                <div className="flex items-center justify-between gap-3">
-                  <span className="text-muted-foreground">{t('collectors:card.lastHeartbeat')}</span>
-                  <span className="font-mono text-xs text-foreground">
-                    {collector.lastHeartbeatUtc
-                      ? `${formatRelative(collector.lastHeartbeatUtc)} (${formatUtcDateTime(collector.lastHeartbeatUtc)})`
-                      : '—'}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between gap-3">
-                  <span className="text-muted-foreground">{t('collectors:card.version')}</span>
-                  <span className="font-mono text-xs text-foreground">{collector.configVersion}</span>
-                </div>
-                <div className="flex items-center justify-between gap-3">
-                  <span className="text-muted-foreground">{t('collectors:card.latestError')}</span>
-                  <span className="max-w-[60%] text-right text-xs text-foreground">
-                    {collector.lastError ?? '—'}
-                  </span>
-                </div>
-              </div>
-
-              <div className="flex flex-wrap gap-2">
-                <Button
-                  variant="secondary"
-                  disabled={mutatingId === collector.collectorId || collector.status === 'Running'}
-                  onClick={() => void startCollector(collector.collectorId)}
-                >
-                  {t('collectors:actions.start')}
-                </Button>
-                <Button
-                  variant="outline"
-                  disabled={mutatingId === collector.collectorId || collector.status === 'Disabled'}
-                  onClick={() => void stopCollector(collector.collectorId)}
-                >
-                  {t('collectors:actions.stop')}
-                </Button>
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    setForm(createCollectorForm(collector))
-                    openSheet(collector.collectorId)
-                  }}
-                >
-                  {t('collectors:actions.configure')}
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>{t('collectors:columns.collector')}</TableHead>
+                    <TableHead>{t('collectors:columns.status')}</TableHead>
+                    <TableHead>{t('collectors:columns.capability')}</TableHead>
+                    <TableHead>{t('collectors:columns.lastHeartbeat')}</TableHead>
+                    <TableHead>{t('collectors:columns.version')}</TableHead>
+                    <TableHead>{t('collectors:columns.latestError')}</TableHead>
+                    <TableHead className="text-right">{t('collectors:columns.actions')}</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {items.map((collector) => (
+                    <TableRow key={collector.collectorId}>
+                      <TableCell className="min-w-[220px]">
+                        <div className="space-y-1">
+                          <div className="font-medium text-foreground">
+                            {translateCollectorId(t, collector.collectorId, collector.displayName)}
+                          </div>
+                          <div className="text-xs text-muted-foreground">
+                            {collector.displayName}
+                          </div>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <StatusBadge
+                          label={translateCollectorStatus(t, collector.status)}
+                          tone={getCollectorStatusTone(collector.status)}
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <StatusBadge
+                          label={translateCapability(t, collector.capability)}
+                          tone={getCapabilityTone(collector.capability)}
+                        />
+                      </TableCell>
+                      <TableCell className="min-w-[200px]">
+                        {collector.lastHeartbeatUtc ? (
+                          <div className="space-y-1">
+                            <div className="font-mono text-xs text-foreground">
+                              {formatRelative(collector.lastHeartbeatUtc)}
+                            </div>
+                            <div className="font-mono text-[11px] text-muted-foreground">
+                              {formatUtcDateTime(collector.lastHeartbeatUtc)}
+                            </div>
+                          </div>
+                        ) : (
+                          <span className="text-muted-foreground">—</span>
+                        )}
+                      </TableCell>
+                      <TableCell className="font-mono text-xs text-foreground">
+                        {collector.configVersion}
+                      </TableCell>
+                      <TableCell className="max-w-[320px]">
+                        <span className="line-clamp-2 text-xs text-muted-foreground">
+                          {collector.lastError ?? '—'}
+                        </span>
+                      </TableCell>
+                      <TableCell className="min-w-[220px]">
+                        <div className="flex flex-wrap justify-end gap-2">
+                          <Button
+                            size="sm"
+                            variant="secondary"
+                            disabled={
+                              mutatingId === collector.collectorId ||
+                              collector.status === 'Running'
+                            }
+                            onClick={() => void startCollector(collector.collectorId)}
+                          >
+                            {t('collectors:actions.start')}
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            disabled={
+                              mutatingId === collector.collectorId ||
+                              collector.status === 'Disabled'
+                            }
+                            onClick={() => void stopCollector(collector.collectorId)}
+                          >
+                            {t('collectors:actions.stop')}
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            disabled={mutatingId === collector.collectorId}
+                            onClick={() => openCollectorConfig(collector)}
+                          >
+                            {t('collectors:actions.configure')}
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
+          </CardContent>
+        </Card>
+      ) : null}
 
       <Sheet
         open={!!selectedCollector}

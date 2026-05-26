@@ -10,10 +10,14 @@
     "stop": "Stop",
     "configure": "Configure"
   },
-  "card": {
+  "columns": {
+    "collector": "Collector",
+    "status": "Status",
+    "capability": "Support",
     "lastHeartbeat": "Last heartbeat",
+    "version": "Version",
     "latestError": "Latest error",
-    "version": "Config version"
+    "actions": "Actions"
   },
   "sheet": {
     "title": "Collector configuration"

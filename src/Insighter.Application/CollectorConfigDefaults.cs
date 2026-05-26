@@ -5,7 +5,7 @@ namespace Insighter.Application;
 
 public static class CollectorConfigDefaults
 {
-    public static string BuildSettingsJson(string collectorId, AppSettingsSnapshot settings)
+    public static string BuildSettingsJson(string collectorId)
     {
         JsonObject result = collectorId switch
         {
@@ -13,8 +13,8 @@ public static class CollectorConfigDefaults
             var id when id == CollectorIds.SessionState => [],
             var id when id == CollectorIds.ForegroundWindow => new JsonObject
             {
-                ["titleMaxLength"] = settings.DefaultWindowTitleMaxLength,
-                ["processBlacklist"] = new JsonArray(settings.WindowProcessBlacklist.Select(x => (JsonNode?)JsonValue.Create(x)).ToArray()),
+                ["titleMaxLength"] = 200,
+                ["processBlacklist"] = new JsonArray(),
             },
             var id when id == CollectorIds.Idle => new JsonObject
             {
@@ -23,8 +23,8 @@ public static class CollectorConfigDefaults
             },
             var id when id == CollectorIds.Clipboard => new JsonObject
             {
-                ["captureMode"] = settings.DefaultClipboardMode.ToString(),
-                ["maxContentLength"] = settings.DefaultClipboardMaxLength,
+                ["captureMode"] = nameof(ClipboardCaptureMode.Preview),
+                ["maxContentLength"] = 200,
                 ["textOnly"] = true,
             },
             var id when id == CollectorIds.ProcessLifecycle => new JsonObject

@@ -100,6 +100,17 @@ public sealed class SqliteLogEventRepository : ILogEventRepository
         return rows.Select(ToDomain).ToArray();
     }
 
+    public async Task<int> DeleteOlderThanAsync(DateTimeOffset thresholdUtc, CancellationToken cancellationToken)
+    {
+        using var connection = _connectionFactory.CreateConnection();
+        await connection.OpenAsync(cancellationToken);
+        return await connection.ExecuteAsync(
+            new CommandDefinition(
+                "DELETE FROM LogEvents WHERE OccurredAtUtc < @ThresholdUtc;",
+                new { ThresholdUtc = thresholdUtc.ToUnixTimeMilliseconds() },
+                cancellationToken: cancellationToken));
+    }
+
     private static void AddSearchParameters(LogQueryFilter filter, ICollection<string> where, DynamicParameters parameters)
     {
         if (filter.FromUtc.HasValue)

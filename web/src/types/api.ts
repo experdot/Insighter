@@ -89,19 +89,11 @@ export type SettingsResponse = {
   queueCapacity: number
   retentionDays: number
   queryMaxPageSize: number
-  defaultClipboardMode: ClipboardCaptureMode
-  defaultClipboardMaxLength: number
-  defaultWindowTitleMaxLength: number
-  windowProcessBlacklist: string[]
   autoStartCollectors: boolean
 }
 
 export type SettingsUpdateRequest = {
   retentionDays?: number
-  defaultClipboardMode?: ClipboardCaptureMode
-  defaultClipboardMaxLength?: number
-  defaultWindowTitleMaxLength?: number
-  windowProcessBlacklist?: string[]
 }
 
 export type LogsQuery = {

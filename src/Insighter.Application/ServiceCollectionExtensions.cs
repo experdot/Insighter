@@ -19,6 +19,7 @@ public static class ServiceCollectionExtensions
         services.TryAddSingleton<ISettingsService, SettingsService>();
         services.TryAddSingleton<ILogQueryService, LogQueryService>();
         services.TryAddSingleton<ILogAggregationService, LogAggregationService>();
+        services.TryAddSingleton<ILogRetentionService, LogRetentionService>();
         services.TryAddSingleton<IAiLogQueryService, AiLogQueryService>();
         services.TryAddSingleton<IRedactionService, DefaultRedactionService>();
         services.TryAddSingleton(sp =>
@@ -33,6 +34,7 @@ public static class ServiceCollectionExtensions
         });
         services.AddHostedService<EventPipelineHostedService>();
         services.AddHostedService<CollectorManagerHostedService>();
+        services.AddHostedService<RetentionCleanupHostedService>();
         return services;
     }
 }

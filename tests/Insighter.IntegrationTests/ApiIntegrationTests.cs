@@ -1,7 +1,9 @@
 using System.Net;
 using System.Net.Http.Json;
 using Dapper;
+using Insighter.Application;
 using Insighter.Contracts;
+using Insighter.Domain;
 using Insighter.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
@@ -57,13 +59,47 @@ public sealed class ApiIntegrationTests : IClassFixture<InsighterWebApplicationF
     public async Task UpdateSettings_Persists_And_Returns_Value()
     {
         var client = _factory.CreateClient();
-        var result = await client.PutAsJsonAsync("/api/settings", new SettingsUpdateRequest(10, "MetadataOnly", 20, 30, ["code"]));
+        var result = await client.PutAsJsonAsync("/api/settings", new SettingsUpdateRequest(10));
 
         Assert.Equal(HttpStatusCode.OK, result.StatusCode);
         var payload = await result.Content.ReadFromJsonAsync<SettingsResponse>();
         Assert.NotNull(payload);
-        Assert.Equal("MetadataOnly", payload!.DefaultClipboardMode);
         Assert.Equal(10, payload.RetentionDays);
+    }
+
+    [Fact]
+    public async Task RetentionCleanup_Deletes_Expired_LogEvents()
+    {
+        var oldId = Guid.NewGuid();
+        var recentId = Guid.NewGuid();
+        await _factory.SetAppSettingAsync(SettingsKeys.RetentionDays, "3");
+        await _factory.InsertLogAsync(
+            oldId,
+            DateTimeOffset.UtcNow.AddDays(-10),
+            "System.Startup",
+            "SystemLifecycleCollector",
+            0,
+            "1",
+            Environment.MachineName,
+            """{"schemaVersion":1,"platform":"windows","data":{"source":"old"}}""");
+        await _factory.InsertLogAsync(
+            recentId,
+            DateTimeOffset.UtcNow.AddDays(-1),
+            "System.Startup",
+            "SystemLifecycleCollector",
+            0,
+            "1",
+            Environment.MachineName,
+            """{"schemaVersion":1,"platform":"windows","data":{"source":"recent"}}""");
+
+        using var scope = _factory.Services.CreateScope();
+        var retentionService = scope.ServiceProvider.GetRequiredService<ILogRetentionService>();
+
+        var deleted = await retentionService.DeleteExpiredAsync(CancellationToken.None);
+
+        Assert.Equal(1, deleted);
+        Assert.False(await _factory.LogExistsAsync(oldId));
+        Assert.True(await _factory.LogExistsAsync(recentId));
     }
 }
 
@@ -121,7 +157,7 @@ public sealed class InsighterWebApplicationFactory : WebApplicationFactory<Progr
             """,
             new
             {
-                Id = id,
+                Id = id.ToString(),
                 OccurredAtUtc = occurredAtUtc.ToUnixTimeMilliseconds(),
                 EventType = eventType,
                 CollectorId = collectorId,
@@ -130,5 +166,24 @@ public sealed class InsighterWebApplicationFactory : WebApplicationFactory<Progr
                 MachineId = machineId,
                 Content = content,
             });
+    }
+
+    public async Task SetAppSettingAsync(string key, string value)
+    {
+        using var scope = Services.CreateScope();
+        var repository = scope.ServiceProvider.GetRequiredService<IAppSettingsRepository>();
+        await repository.UpsertAsync(key, value, CancellationToken.None);
+    }
+
+    public async Task<bool> LogExistsAsync(Guid id)
+    {
+        using var scope = Services.CreateScope();
+        var factory = scope.ServiceProvider.GetRequiredService<ISqliteConnectionFactory>();
+        using var connection = factory.CreateConnection();
+        await connection.OpenAsync();
+        var count = await connection.ExecuteScalarAsync<int>(
+            "SELECT COUNT(1) FROM LogEvents WHERE Id = @Id;",
+            new { Id = id.ToString() });
+        return count > 0;
     }
 }

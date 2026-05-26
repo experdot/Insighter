@@ -10,10 +10,14 @@
     "stop": "停止",
     "configure": "配置"
   },
-  "card": {
+  "columns": {
+    "collector": "采集器",
+    "status": "状态",
+    "capability": "能力",
     "lastHeartbeat": "最近心跳",
+    "version": "版本",
     "latestError": "最近错误",
-    "version": "配置版本"
+    "actions": "操作"
   },
   "sheet": {
     "title": "采集器配置"

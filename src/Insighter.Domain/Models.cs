@@ -83,10 +83,6 @@ public sealed record AppSettingsSnapshot(
     int QueueCapacity,
     int RetentionDays,
     int QueryMaxPageSize,
-    ClipboardCaptureMode DefaultClipboardMode,
-    int DefaultClipboardMaxLength,
-    int DefaultWindowTitleMaxLength,
-    IReadOnlyList<string> WindowProcessBlacklist,
     bool AutoStartCollectors);
 
 public sealed record LogQueryFilter(

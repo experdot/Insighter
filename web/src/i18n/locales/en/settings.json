@@ -1,15 +1,9 @@
 {
   "title": "Settings",
-  "editable": "Editable settings",
+  "editable": "Retention",
   "readonly": "System",
-  "privacy": "Note",
-  "privacyDescription": "Applies to new events only.",
   "fields": {
     "retentionDays": "Retention days",
-    "defaultClipboardMode": "Default clipboard mode",
-    "defaultClipboardMaxLength": "Default clipboard max length",
-    "defaultWindowTitleMaxLength": "Default window title max length",
-    "windowProcessBlacklist": "Window process blacklist",
     "databasePath": "Database path",
     "apiUrls": "API URLs",
     "queueCapacity": "Queue capacity",
