@@ -2,9 +2,9 @@ import type { ReactNode } from 'react'
 import { cn } from '@/lib/utils'
 
 type PageHeaderProps = {
-  eyebrow: string
+  eyebrow?: string
   title: string
-  description: string
+  description?: string
   actions?: ReactNode
   className?: string
 }
@@ -24,13 +24,17 @@ export function PageHeader({
       )}
     >
       <div className="max-w-3xl">
-        <p className="mb-2 text-xs font-semibold uppercase tracking-[0.24em] text-secondary">
-          {eyebrow}
-        </p>
+        {eyebrow ? (
+          <p className="mb-2 text-xs font-semibold uppercase tracking-[0.24em] text-secondary">
+            {eyebrow}
+          </p>
+        ) : null}
         <h1 className="page-heading">{title}</h1>
-        <p className="mt-3 max-w-2xl text-sm leading-7 text-muted-foreground md:text-base">
-          {description}
-        </p>
+        {description ? (
+          <p className="mt-3 max-w-2xl text-sm leading-7 text-muted-foreground md:text-base">
+            {description}
+          </p>
+        ) : null}
       </div>
       {actions ? <div className="flex items-center gap-3">{actions}</div> : null}
     </div>

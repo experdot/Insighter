@@ -1,6 +1,5 @@
 {
   "appName": "Insighter",
-  "appDescription": "一个用于观察系统行为、采集器状态与本地事件轨迹的工作台。",
   "workspace": "工作台",
   "localApi": "本地 API",
   "all": "全部",

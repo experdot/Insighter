@@ -49,15 +49,12 @@ export function SettingsPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        eyebrow={t('settings:eyebrow')}
         title={t('settings:title')}
-        description={t('settings:description')}
       />
 
       {error ? (
         <EmptyState
           title={error}
-          description={t('settings:privacyDescription')}
           icon={<TriangleAlert className="size-6" />}
         />
       ) : null}
@@ -66,7 +63,6 @@ export function SettingsPage() {
         <Card>
           <CardHeader>
             <CardTitle>{t('settings:editable')}</CardTitle>
-            <CardDescription>{t('settings:privacyDescription')}</CardDescription>
           </CardHeader>
           <CardContent className="grid gap-5">
             <div className="space-y-2">

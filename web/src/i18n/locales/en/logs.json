@@ -1,10 +1,8 @@
 {
-  "eyebrow": "Search trail",
-  "title": "Inspect structured event history",
-  "description": "Filter by time, event family, severity, session, and collector. Open any row to inspect normalized fields and raw JSON.",
+  "title": "Logs",
   "empty": {
     "title": "No matching logs",
-    "description": "Try widening the time range or removing one of the active filters."
+    "description": "Adjust filters."
   },
   "columns": {
     "time": "Time",
@@ -28,7 +26,7 @@
     "reset": "Reset"
   },
   "details": {
-    "title": "Log details",
+    "title": "Details",
     "collector": "Collector",
     "severity": "Severity",
     "session": "Session",

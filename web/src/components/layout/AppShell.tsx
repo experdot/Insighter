@@ -66,9 +66,6 @@ export function AppShell() {
                   </p>
                 </div>
               </div>
-              <p className="mt-5 text-sm leading-7 text-muted-foreground">
-                {t('common:appDescription')}
-              </p>
             </div>
 
             <nav className="flex-1 space-y-2 px-4 py-5">
@@ -116,9 +113,6 @@ export function AppShell() {
                   <SheetHeader>
                     <SheetTitle>{t('common:appName')}</SheetTitle>
                   </SheetHeader>
-                  <div className="px-5 pb-4 text-sm leading-7 text-muted-foreground md:px-6">
-                    {t('common:appDescription')}
-                  </div>
                   <nav className="space-y-2 px-4 pb-6 md:px-5">
                     {items.map((item) => (
                       <NavLink key={item.to} {...item} />

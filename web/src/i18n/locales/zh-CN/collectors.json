@@ -1,11 +1,9 @@
 {
-  "eyebrow": "采集编队",
-  "title": "管理进入事件管道的各个采集器",
-  "description": "查看能力支持、运行状态和心跳新鲜度。通过前端表单调整采集行为，而不是直接改后端 JSON。",
+  "title": "采集器",
   "capabilities": "平台能力",
   "empty": {
-    "title": "没有可用采集器",
-    "description": "后端没有返回采集器列表。请确认宿主已经启动且初始化完成。"
+    "title": "暂无采集器",
+    "description": "检查宿主。"
   },
   "actions": {
     "start": "启动",
@@ -18,8 +16,7 @@
     "version": "配置版本"
   },
   "sheet": {
-    "title": "采集器配置",
-    "description": "调整选中采集器的采集行为与安全边界。"
+    "title": "采集器配置"
   },
   "fields": {
     "titleMaxLength": "窗口标题最大长度",

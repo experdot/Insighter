@@ -1,11 +1,9 @@
 {
-  "eyebrow": "Retention and privacy",
-  "title": "Tune how the local host stores and exposes sensitive data",
-  "description": "Adjust runtime-safe defaults and review read-only operational settings returned by the backend.",
+  "title": "Settings",
   "editable": "Editable settings",
-  "readonly": "Read-only system info",
-  "privacy": "Privacy notes",
-  "privacyDescription": "Clipboard previews and window titles are already redacted before persistence. These defaults only affect future events.",
+  "readonly": "System",
+  "privacy": "Note",
+  "privacyDescription": "Applies to new events only.",
   "fields": {
     "retentionDays": "Retention days",
     "defaultClipboardMode": "Default clipboard mode",

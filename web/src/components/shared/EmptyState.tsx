@@ -3,7 +3,7 @@ import { Card, CardContent } from '@/components/ui/card'
 
 type EmptyStateProps = {
   title: string
-  description: string
+  description?: string
   icon?: ReactNode
 }
 
@@ -20,9 +20,11 @@ export function EmptyState({ title, description, icon }: EmptyStateProps) {
           <h3 className="font-heading text-xl font-semibold text-foreground">
             {title}
           </h3>
-          <p className="mt-2 max-w-xl text-sm leading-6 text-muted-foreground">
-            {description}
-          </p>
+          {description ? (
+            <p className="mt-2 max-w-xl text-sm leading-6 text-muted-foreground">
+              {description}
+            </p>
+          ) : null}
         </div>
       </CardContent>
     </Card>

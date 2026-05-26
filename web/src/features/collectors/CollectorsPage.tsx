@@ -24,7 +24,6 @@ import {
 import {
   Sheet,
   SheetContent,
-  SheetDescription,
   SheetFooter,
   SheetHeader,
   SheetTitle,
@@ -177,15 +176,12 @@ export function CollectorsPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        eyebrow={t('collectors:eyebrow')}
         title={t('collectors:title')}
-        description={t('collectors:description')}
       />
 
       {error ? (
         <EmptyState
           title={error}
-          description={t('collectors:empty.description')}
           icon={<TriangleAlert className="size-6" />}
         />
       ) : null}
@@ -280,7 +276,6 @@ export function CollectorsPage() {
         <SheetContent side="right" className="flex flex-col overflow-y-auto">
           <SheetHeader>
             <SheetTitle>{t('collectors:sheet.title')}</SheetTitle>
-            <SheetDescription>{t('collectors:sheet.description')}</SheetDescription>
           </SheetHeader>
 
           {selectedCollector ? (

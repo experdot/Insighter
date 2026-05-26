@@ -1,6 +1,5 @@
 {
   "appName": "Insighter",
-  "appDescription": "A local observability desk for system activity, collector health, and private event trails.",
   "workspace": "Workspace",
   "localApi": "Local API",
   "all": "All",

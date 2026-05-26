@@ -75,9 +75,7 @@ export function LogsPage() {
   return (
     <div className="space-y-5">
       <PageHeader
-        eyebrow={t('logs:eyebrow')}
         title={t('logs:title')}
-        description={t('logs:description')}
       />
 
       <Card className="border-foreground">
@@ -214,7 +212,6 @@ export function LogsPage() {
       {error ? (
         <EmptyState
           title={error}
-          description={t('logs:empty.description')}
           icon={<TriangleAlert className="size-6" />}
         />
       ) : null}

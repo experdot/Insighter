@@ -21,25 +21,16 @@ import {
 import { EmptyState } from '@/components/shared/EmptyState'
 import { PageHeader } from '@/components/shared/PageHeader'
 import { StatCard } from '@/components/shared/StatCard'
-import { StatusBadge } from '@/components/shared/StatusBadge'
 import { Button } from '@/components/ui/button'
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { formatDurationSeconds, formatNumber, formatUtcDateTime } from '@/lib/format'
-import {
-  getCapabilityTone,
-  getCollectorStatusTone,
-  translateCapability,
-  translateCollectorId,
-  translateCollectorStatus,
-  translateEventType,
-} from '@/lib/presenters'
+import { translateEventType } from '@/lib/presenters'
 import { useDashboardStore } from '@/store/dashboard-store'
 import { useRefreshStore } from '@/store/refresh'
 
@@ -51,7 +42,6 @@ export function DashboardPage() {
     range,
     summary,
     timeline,
-    collectors,
     loading,
     error,
     setRange,
@@ -90,9 +80,7 @@ export function DashboardPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        eyebrow={t('dashboard:eyebrow')}
         title={t('dashboard:title')}
-        description={t('dashboard:description')}
         actions={
           <div className="flex items-center gap-2">
             <Button
@@ -114,7 +102,6 @@ export function DashboardPage() {
       {error ? (
         <EmptyState
           title={error}
-          description={t('dashboard:empty.description')}
           icon={<TriangleAlert className="size-6" />}
         />
       ) : null}
@@ -176,7 +163,6 @@ export function DashboardPage() {
         <Card>
           <CardHeader>
             <CardTitle>{t('dashboard:timeline')}</CardTitle>
-            <CardDescription>{t('dashboard:timelineDescription')}</CardDescription>
           </CardHeader>
           <CardContent className="h-[320px]">
             {loading && timelineData.length === 0 ? (
@@ -278,52 +264,6 @@ export function DashboardPage() {
         </Card>
       </section>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>{t('dashboard:collectorHealth')}</CardTitle>
-          <CardDescription>{t('dashboard:collectorHealthDescription')}</CardDescription>
-        </CardHeader>
-        <CardContent className="grid gap-4 lg:grid-cols-2">
-          {collectors.map((collector) => (
-            <div
-              key={collector.collectorId}
-              className="rounded-[24px] border border-border/70 bg-card/55 p-5"
-            >
-              <div className="flex flex-wrap items-start justify-between gap-3">
-                <div>
-                  <h3 className="font-heading text-xl font-semibold tracking-[-0.03em]">
-                    {translateCollectorId(t, collector.collectorId, collector.displayName)}
-                  </h3>
-                  <p className="mt-1 text-sm text-muted-foreground">
-                    {collector.displayName}
-                  </p>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  <StatusBadge
-                    label={translateCollectorStatus(t, collector.status)}
-                    tone={getCollectorStatusTone(collector.status)}
-                  />
-                  <StatusBadge
-                    label={translateCapability(t, collector.capability)}
-                    tone={getCapabilityTone(collector.capability)}
-                  />
-                </div>
-              </div>
-              <div className="mt-4 grid gap-2 text-sm text-muted-foreground">
-                <p>
-                  {t('dashboard:health.lastHeartbeat')}: <span className="text-foreground">{formatUtcDateTime(collector.lastHeartbeatUtc)}</span>
-                </p>
-                <p>
-                  {t('dashboard:health.enabled')}: <span className="text-foreground">{collector.enabled ? t('common:enabled') : t('common:disabled')}</span>
-                </p>
-                <p>
-                  {t('dashboard:health.reason')}: <span className="text-foreground">{collector.capabilityReason ?? '—'}</span>
-                </p>
-              </div>
-            </div>
-          ))}
-        </CardContent>
-      </Card>
     </div>
   )
 }
