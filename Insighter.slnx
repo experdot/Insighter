@@ -1,13 +1,17 @@
 <Solution>
   <Folder Name="/src/">
     <Project Path="src/Insighter.Application/Insighter.Application.csproj" />
+    <Project Path="src/Insighter.Agent/Insighter.Agent.csproj" />
+    <Project Path="src/Insighter.Agent.Startup/Insighter.Agent.Startup.csproj" />
     <Project Path="src/Insighter.Contracts/Insighter.Contracts.csproj" />
     <Project Path="src/Insighter.Domain/Insighter.Domain.csproj" />
     <Project Path="src/Insighter.Host/Insighter.Host.csproj" />
+    <Project Path="src/Insighter.Hosting/Insighter.Hosting.csproj" />
     <Project Path="src/Insighter.Infrastructure.Persistence/Insighter.Infrastructure.Persistence.csproj" />
     <Project Path="src/Insighter.Infrastructure.Platform.Windows/Insighter.Infrastructure.Platform.Windows.csproj" />
   </Folder>
   <Folder Name="/tests/">
+    <Project Path="tests/Insighter.Agent.Tests/Insighter.Agent.Tests.csproj" />
     <Project Path="tests/Insighter.Application.Tests/Insighter.Application.Tests.csproj" />
     <Project Path="tests/Insighter.IntegrationTests/Insighter.IntegrationTests.csproj" />
   </Folder>

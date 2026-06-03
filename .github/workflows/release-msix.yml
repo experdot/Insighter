@@ -1,0 +1,119 @@
+name: Release MSIX
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  release:
+    runs-on: windows-latest
+
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: Resolve version
+        id: version
+        shell: pwsh
+        run: |
+          $version = ./scripts/get-version.ps1 -GitRef '${{ github.ref }}'
+          "value=$version" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
+
+      - name: Install frontend dependencies
+        working-directory: web
+        run: pnpm install --frozen-lockfile
+
+      - name: Build frontend
+        working-directory: web
+        run: pnpm build
+
+      - name: Publish Insighter.Agent
+        shell: pwsh
+        run: |
+          dotnet publish src/Insighter.Agent/Insighter.Agent.csproj `
+            --configuration Release `
+            --runtime win-x64 `
+            --self-contained true `
+            -p:Version=${{ steps.version.outputs.value }} `
+            -p:AssemblyVersion=${{ steps.version.outputs.value }}.0 `
+            -p:FileVersion=${{ steps.version.outputs.value }}.0 `
+            -o artifacts/publish/Insighter.Agent
+
+      - name: Publish startup shim
+        shell: pwsh
+        run: |
+          dotnet publish src/Insighter.Agent.Startup/Insighter.Agent.Startup.csproj `
+            --configuration Release `
+            --runtime win-x64 `
+            --self-contained true `
+            -p:Version=${{ steps.version.outputs.value }} `
+            -p:AssemblyVersion=${{ steps.version.outputs.value }}.0 `
+            -p:FileVersion=${{ steps.version.outputs.value }}.0 `
+            -o artifacts/publish/Insighter.Agent.Startup
+
+      - name: Create development certificate
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Path artifacts/certs -Force | Out-Null
+          ./scripts/new-dev-certificate.ps1 `
+            -OutputPfxPath artifacts/certs/Insighter.Dev.pfx `
+            -OutputCerPath artifacts/certs/Insighter.Dev.cer `
+            -Password 'InsighterDev123!'
+
+      - name: Package MSIX
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Path artifacts/release -Force | Out-Null
+          ./scripts/package-msix.ps1 `
+            -Version ${{ steps.version.outputs.value }} `
+            -Publisher 'CN=Insighter Dev' `
+            -PublishDir artifacts/publish/Insighter.Agent `
+            -StartupPublishDir artifacts/publish/Insighter.Agent.Startup `
+            -OutputDir artifacts/release `
+            -CertificatePath artifacts/certs/Insighter.Dev.pfx `
+            -CertificatePassword 'InsighterDev123!'
+
+      - name: Copy install guide
+        shell: pwsh
+        run: |
+          Copy-Item install-msix.md artifacts/release/install-msix.md -Force
+          Copy-Item artifacts/certs/Insighter.Dev.cer artifacts/release/Insighter.Agent_${{ steps.version.outputs.value }}_x64.cer -Force
+
+      - name: Write checksums
+        shell: pwsh
+        run: |
+          ./scripts/write-sha256.ps1 `
+            -Files @(
+              "artifacts/release/Insighter.Agent_${{ steps.version.outputs.value }}_x64.msix",
+              "artifacts/release/Insighter.Agent_${{ steps.version.outputs.value }}_x64.cer",
+              "artifacts/release/install-msix.md"
+            ) `
+            -OutputPath artifacts/release/SHA256SUMS.txt
+
+      - name: Create release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            artifacts/release/Insighter.Agent_${{ steps.version.outputs.value }}_x64.msix
+            artifacts/release/Insighter.Agent_${{ steps.version.outputs.value }}_x64.cer
+            artifacts/release/SHA256SUMS.txt
+            artifacts/release/install-msix.md

@@ -84,7 +84,10 @@ Collector -> EventSink -> Channel -> Validate -> Redact -> Persist -> API -> Web
 
 ```text
 src/
+  Insighter.Agent/
+  Insighter.Agent.Startup/
   Insighter.Host/
+  Insighter.Hosting/
   Insighter.Application/
   Insighter.Domain/
   Insighter.Contracts/
@@ -152,6 +155,18 @@ http://127.0.0.1:5078
 
 ## 快速开始
 
+面向终端用户的目标分发形态是 `Insighter.Agent`，以自包含的 Windows 托盘程序形式通过 `MSIX` 安装包交付。
+
+安装后的行为：
+
+- `Insighter.Agent.exe` 以单实例托盘程序运行。
+- 用户手动启动时，会在默认浏览器中打开本地 Dashboard。
+- `开机启动` 通过托盘菜单切换，底层使用打包后的 `StartupTask`。
+- 用户登录时，由包内的启动辅助程序以后台模式拉起托盘程序，不主动打开浏览器。
+- 运行时数据保存在 `%LocalAppData%\Insighter\`。
+
+下面的命令仍然用于本地开发。
+
 ### 前置要求
 
 - Windows
@@ -199,7 +214,7 @@ Vite 开发服务器会将 `/api` 请求代理到本地宿主。
 前端构建产物会直接输出到：
 
 ```text
-src/Insighter.Host/wwwroot
+src/Insighter.Hosting/wwwroot
 ```
 
 执行：

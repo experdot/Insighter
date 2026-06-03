@@ -84,7 +84,10 @@ Project layout:
 
 ```text
 src/
+  Insighter.Agent/
+  Insighter.Agent.Startup/
   Insighter.Host/
+  Insighter.Hosting/
   Insighter.Application/
   Insighter.Domain/
   Insighter.Contracts/
@@ -152,6 +155,18 @@ http://127.0.0.1:5078
 
 ## Quick Start
 
+For end users, the intended distribution is `Insighter.Agent` as a self-contained Windows tray app packaged as `MSIX`.
+
+Installed behavior:
+
+- `Insighter.Agent.exe` runs as a single-instance tray process.
+- Manual launch opens the local dashboard in the default browser.
+- `Launch at login` is toggled from the tray menu and is backed by the packaged `StartupTask`.
+- At login, the packaged startup shim launches the tray app in background mode without opening the browser.
+- Runtime data is stored under `%LocalAppData%\Insighter\`.
+
+Repository commands below are still for local development.
+
 ### Prerequisites
 
 - Windows
@@ -199,7 +214,7 @@ The Vite dev server proxies `/api` requests to the local host.
 The frontend build output is emitted directly into:
 
 ```text
-src/Insighter.Host/wwwroot
+src/Insighter.Hosting/wwwroot
 ```
 
 Build it with:

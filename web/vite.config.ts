@@ -22,7 +22,7 @@ export default defineConfig({
     },
   },
   build: {
-    outDir: '../src/Insighter.Host/wwwroot',
+    outDir: '../src/Insighter.Hosting/wwwroot',
     emptyOutDir: true,
   },
 })

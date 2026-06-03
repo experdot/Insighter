@@ -2,8 +2,18 @@
   <ItemGroup>
     <ProjectReference Include="..\Insighter.Application\Insighter.Application.csproj" />
     <ProjectReference Include="..\Insighter.Contracts\Insighter.Contracts.csproj" />
+    <ProjectReference Include="..\Insighter.Hosting\Insighter.Hosting.csproj" />
     <ProjectReference Include="..\Insighter.Infrastructure.Persistence\Insighter.Infrastructure.Persistence.csproj" />
     <ProjectReference Include="..\Insighter.Infrastructure.Platform.Windows\Insighter.Infrastructure.Platform.Windows.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Remove="wwwroot\**\*" />
+    <Content Include="..\Insighter.Hosting\wwwroot\**\*">
+      <Link>wwwroot\%(RecursiveDir)%(Filename)%(Extension)</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
   </ItemGroup>
 
   <PropertyGroup>

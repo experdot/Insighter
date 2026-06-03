@@ -53,6 +53,8 @@ node_modules/
 dist/
 build/
 src/Insighter.Host/wwwroot/
+src/Insighter.Hosting/wwwroot/*
+!src/Insighter.Hosting/wwwroot/.gitkeep
 .vite/
 .turbo/
 .next/
