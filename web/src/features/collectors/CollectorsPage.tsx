@@ -61,9 +61,6 @@ type CollectorConfigForm = {
   captureMode: ClipboardCaptureMode
   maxContentLength: string
   textOnly: boolean
-  captureExecutablePath: boolean
-  ignoreCurrentProcess: boolean
-  ignoreSystemProcesses: boolean
   batteryLevelStepPercent: string
   reportPowerSourceChanges: boolean
   reportChargingStateChanges: boolean
@@ -84,9 +81,6 @@ function createCollectorForm(collector?: CollectorResponse | null): CollectorCon
     captureMode: (stringSetting(settings, 'captureMode', 'Preview') || 'Preview') as ClipboardCaptureMode,
     maxContentLength: String(numberSetting(settings, 'maxContentLength', 200) || 200),
     textOnly: booleanSetting(settings, 'textOnly', true),
-    captureExecutablePath: booleanSetting(settings, 'captureExecutablePath', true),
-    ignoreCurrentProcess: booleanSetting(settings, 'ignoreCurrentProcess', true),
-    ignoreSystemProcesses: booleanSetting(settings, 'ignoreSystemProcesses', true),
     batteryLevelStepPercent: String(numberSetting(settings, 'batteryLevelStepPercent', 5) || 5),
     reportPowerSourceChanges: booleanSetting(settings, 'reportPowerSourceChanges', true),
     reportChargingStateChanges: booleanSetting(settings, 'reportChargingStateChanges', true),
@@ -148,12 +142,6 @@ export function CollectorsPage() {
       settings.captureMode = form.captureMode
       settings.maxContentLength = Number(form.maxContentLength)
       settings.textOnly = form.textOnly
-    }
-
-    if (selectedCollector.collectorId === 'ProcessLifecycleCollector') {
-      settings.captureExecutablePath = form.captureExecutablePath
-      settings.ignoreCurrentProcess = form.ignoreCurrentProcess
-      settings.ignoreSystemProcesses = form.ignoreSystemProcesses
     }
 
     if (selectedCollector.collectorId === 'PowerCollector') {
@@ -470,59 +458,6 @@ export function CollectorsPage() {
                         setForm((current) => ({
                           ...current,
                           textOnly: checked,
-                        }))
-                      }
-                    />
-                  </div>
-                </>
-              ) : null}
-
-              {selectedCollector.collectorId === 'ProcessLifecycleCollector' ? (
-                <>
-                  <div className="flex items-center justify-between rounded-[24px] border border-border/70 bg-card/55 p-4">
-                    <div>
-                      <p className="font-medium text-foreground">
-                        {t('collectors:fields.captureExecutablePath')}
-                      </p>
-                    </div>
-                    <Switch
-                      checked={form.captureExecutablePath}
-                      onCheckedChange={(checked) =>
-                        setForm((current) => ({
-                          ...current,
-                          captureExecutablePath: checked,
-                        }))
-                      }
-                    />
-                  </div>
-                  <div className="flex items-center justify-between rounded-[24px] border border-border/70 bg-card/55 p-4">
-                    <div>
-                      <p className="font-medium text-foreground">
-                        {t('collectors:fields.ignoreCurrentProcess')}
-                      </p>
-                    </div>
-                    <Switch
-                      checked={form.ignoreCurrentProcess}
-                      onCheckedChange={(checked) =>
-                        setForm((current) => ({
-                          ...current,
-                          ignoreCurrentProcess: checked,
-                        }))
-                      }
-                    />
-                  </div>
-                  <div className="flex items-center justify-between rounded-[24px] border border-border/70 bg-card/55 p-4">
-                    <div>
-                      <p className="font-medium text-foreground">
-                        {t('collectors:fields.ignoreSystemProcesses')}
-                      </p>
-                    </div>
-                    <Switch
-                      checked={form.ignoreSystemProcesses}
-                      onCheckedChange={(checked) =>
-                        setForm((current) => ({
-                          ...current,
-                          ignoreSystemProcesses: checked,
                         }))
                       }
                     />

@@ -45,12 +45,6 @@ public enum SystemLifecycleSignalKind
     Resume = 1,
 }
 
-public enum ProcessLifecycleEventKind
-{
-    Started = 0,
-    Exited = 1,
-}
-
 public enum PowerSourceKind
 {
     Unknown = 0,

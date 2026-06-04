@@ -32,18 +32,6 @@ public sealed class ClipboardCollectorSettings
     public bool TextOnly { get; set; } = true;
 }
 
-public sealed class ProcessLifecycleCollectorSettings
-{
-    [JsonPropertyName("captureExecutablePath")]
-    public bool CaptureExecutablePath { get; set; } = true;
-
-    [JsonPropertyName("ignoreCurrentProcess")]
-    public bool IgnoreCurrentProcess { get; set; } = true;
-
-    [JsonPropertyName("ignoreSystemProcesses")]
-    public bool IgnoreSystemProcesses { get; set; } = true;
-}
-
 public sealed class PowerCollectorSettings
 {
     [JsonPropertyName("batteryLevelStepPercent")]

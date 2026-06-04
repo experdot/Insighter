@@ -26,8 +26,7 @@ public sealed class ApiIntegrationTests : IClassFixture<InsighterWebApplicationF
         var collectors = await client.GetFromJsonAsync<CollectorResponse[]>("/api/collectors");
 
         Assert.NotNull(collectors);
-        Assert.Equal(8, collectors!.Length);
-        Assert.Contains(collectors, x => x.CollectorId == "ProcessLifecycleCollector");
+        Assert.Equal(7, collectors!.Length);
         Assert.Contains(collectors, x => x.CollectorId == "PowerCollector");
         Assert.Contains(collectors, x => x.CollectorId == "NetworkConnectivityCollector");
     }
@@ -38,12 +37,12 @@ public sealed class ApiIntegrationTests : IClassFixture<InsighterWebApplicationF
         await _factory.InsertLogAsync(
             Guid.NewGuid(),
             DateTimeOffset.UtcNow,
-            "Process.Started",
-            "ProcessLifecycleCollector",
+            "Window.Activated",
+            "ForegroundWindowCollector",
             0,
             "1",
             Environment.MachineName,
-            """{"schemaVersion":1,"platform":"windows","data":{"processId":1,"processName":"test","executablePath":"C:\\test.exe","executablePathHash":"ABC"}}""");
+            """{"schemaVersion":1,"platform":"windows","data":{"processId":1,"processName":"test","windowTitle":"Editor"}}""");
 
         var client = _factory.CreateClient();
         var response = await client.GetAsync("/api/logs?page=1&pageSize=50");
@@ -52,7 +51,7 @@ public sealed class ApiIntegrationTests : IClassFixture<InsighterWebApplicationF
         var payload = await response.Content.ReadFromJsonAsync<PagedResponse<LogEventResponse>>();
         Assert.NotNull(payload);
         Assert.True(payload!.TotalCount >= 1);
-        Assert.Contains(payload.Items, x => x.EventType == "Process.Started");
+        Assert.Contains(payload.Items, x => x.EventType == "Window.Activated");
     }
 
     [Fact]

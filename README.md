@@ -10,7 +10,7 @@ This repository already includes a working v1:
 
 - .NET 8 local host with Minimal API
 - SQLite persistence
-- Eight Windows platform collectors
+- Seven Windows platform collectors
 - React + TypeScript frontend
 - Dashboard, Logs, Collectors, and Settings pages
 - English and Simplified Chinese UI
@@ -31,8 +31,6 @@ Insighter currently collects these event types:
 - `User.IdleStarted`
 - `User.IdleEnded`
 - `Clipboard.Changed`
-- `Process.Started`
-- `Process.Exited`
 - `Power.SourceChanged`
 - `Power.ChargingStateChanged`
 - `Power.BatteryLevelChanged`
@@ -57,14 +55,11 @@ Current collectors:
 - `ForegroundWindowCollector`: active window and process changes with title truncation and process blacklist support.
 - `IdleCollector`: idle start and end detection with configurable threshold and optional ignore-while-locked behavior.
 - `ClipboardCollector`: clipboard changes with configurable capture mode, max content length, and text-only guardrail.
-- `ProcessLifecycleCollector`: process start and exit events. It prefers WMI process trace events and automatically falls back to snapshot polling if WMI access is denied, so the collector stays running instead of faulting.
 - `PowerCollector`: power source, charging state, and battery level step changes.
 - `NetworkConnectivityCollector`: online and offline transitions plus active network changes.
 
 Platform notes:
 
-- `ProcessLifecycleCollector` is reported as `PartiallySupported` on Windows because polling fallback has lower fidelity than WMI trace events.
-- In polling fallback, `parentProcessId` and `exitCode` can be unavailable, and `executablePath` is best-effort.
 - The local API exposes these support levels through `GET /api/platform/capabilities` and the collector detail payloads.
 
 ## Screens in v1

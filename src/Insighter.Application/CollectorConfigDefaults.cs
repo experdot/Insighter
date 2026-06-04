@@ -27,12 +27,6 @@ public static class CollectorConfigDefaults
                 ["maxContentLength"] = 200,
                 ["textOnly"] = true,
             },
-            var id when id == CollectorIds.ProcessLifecycle => new JsonObject
-            {
-                ["captureExecutablePath"] = true,
-                ["ignoreCurrentProcess"] = true,
-                ["ignoreSystemProcesses"] = true,
-            },
             var id when id == CollectorIds.Power => new JsonObject
             {
                 ["batteryLevelStepPercent"] = 5,

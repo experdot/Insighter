@@ -54,7 +54,6 @@
     "foregroundWindow": "Foreground window",
     "idle": "Idle state",
     "clipboard": "Clipboard",
-    "processLifecycle": "Process lifecycle",
     "power": "Power",
     "networkConnectivity": "Network connectivity"
   },
@@ -69,8 +68,6 @@
     "userIdleStarted": "User idle started",
     "userIdleEnded": "User idle ended",
     "clipboardChanged": "Clipboard changed",
-    "processStarted": "Process started",
-    "processExited": "Process exited",
     "powerSourceChanged": "Power source changed",
     "powerChargingStateChanged": "Power charging state changed",
     "powerBatteryLevelChanged": "Power battery level changed",

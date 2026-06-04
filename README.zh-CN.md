@@ -10,7 +10,7 @@ Insighter 是一个本地优先的个人系统行为观测工作台。它运行�
 
 - 基于 .NET 8 的本地宿主与 Minimal API
 - SQLite 持久化
-- 8 个 Windows 平台采集器
+- 7 个 Windows 平台采集器
 - React + TypeScript 前端
 - `Dashboard`、`Logs`、`Collectors`、`Settings` 四个页面
 - 中英文双语界面
@@ -31,8 +31,6 @@ Insighter 目前采集以下事件类型：
 - `User.IdleStarted`
 - `User.IdleEnded`
 - `Clipboard.Changed`
-- `Process.Started`
-- `Process.Exited`
 - `Power.SourceChanged`
 - `Power.ChargingStateChanged`
 - `Power.BatteryLevelChanged`
@@ -57,14 +55,11 @@ Insighter 目前采集以下事件类型：
 - `ForegroundWindowCollector`：采集前台窗口与进程变化，支持标题截断和进程黑名单。
 - `IdleCollector`：按可配置阈值采集空闲开始与结束事件，并可选择在锁屏时忽略。
 - `ClipboardCollector`：采集剪贴板变化，支持采集模式、最大内容长度和仅文本限制。
-- `ProcessLifecycleCollector`：采集进程启动与退出事件。优先使用 WMI 进程跟踪事件；如果 WMI 权限被拒绝，会自动回退到进程快照轮询，避免采集器故障退出。
 - `PowerCollector`：采集电源来源、充电状态和电量阶梯变化。
 - `NetworkConnectivityCollector`：采集在线 / 离线切换以及活动网络变化。
 
 平台说明：
 
-- `ProcessLifecycleCollector` 在 Windows 上标记为 `PartiallySupported`，因为轮询回退相比 WMI 事件精度更低。
-- 轮询回退模式下，`parentProcessId` 和 `exitCode` 可能缺失，`executablePath` 也只是尽力获取。
 - 本地 API 会通过 `GET /api/platform/capabilities` 以及采集器详情接口返回这些能力级别信息。
 
 ## v1 前端页面

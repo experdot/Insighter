@@ -109,13 +109,11 @@ public sealed class ApplicationTests
     {
         var foregroundSettings = JsonNode.Parse(CollectorConfigDefaults.BuildSettingsJson(CollectorIds.ForegroundWindow)) as JsonObject;
         var clipboardSettings = JsonNode.Parse(CollectorConfigDefaults.BuildSettingsJson(CollectorIds.Clipboard)) as JsonObject;
-        var processSettings = JsonNode.Parse(CollectorConfigDefaults.BuildSettingsJson(CollectorIds.ProcessLifecycle)) as JsonObject;
         var powerSettings = JsonNode.Parse(CollectorConfigDefaults.BuildSettingsJson(CollectorIds.Power)) as JsonObject;
         var networkSettings = JsonNode.Parse(CollectorConfigDefaults.BuildSettingsJson(CollectorIds.NetworkConnectivity)) as JsonObject;
 
         Assert.NotNull(foregroundSettings);
         Assert.NotNull(clipboardSettings);
-        Assert.NotNull(processSettings);
         Assert.NotNull(powerSettings);
         Assert.NotNull(networkSettings);
 
@@ -124,8 +122,6 @@ public sealed class ApplicationTests
         Assert.Equal(nameof(ClipboardCaptureMode.Preview), clipboardSettings!["captureMode"]?.GetValue<string>());
         Assert.Equal(200, clipboardSettings["maxContentLength"]?.GetValue<int>());
         Assert.Equal(true, clipboardSettings["textOnly"]?.GetValue<bool>());
-        Assert.Equal(true, processSettings!["captureExecutablePath"]?.GetValue<bool>());
-        Assert.Equal(true, processSettings["ignoreCurrentProcess"]?.GetValue<bool>());
         Assert.Equal(5, powerSettings!["batteryLevelStepPercent"]?.GetValue<int>());
         Assert.Equal(15, powerSettings["pollIntervalSeconds"]?.GetValue<int>());
         Assert.Equal(5, networkSettings!["pollIntervalSeconds"]?.GetValue<int>());

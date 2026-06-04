@@ -167,11 +167,6 @@ public interface ISystemLifecycleMonitor
     ValueTask<SystemLifecycleSignal> WaitForNextAsync(CancellationToken cancellationToken);
 }
 
-public interface IProcessLifecycleMonitor
-{
-    ValueTask<ProcessLifecycleNotification> WaitForNextAsync(CancellationToken cancellationToken);
-}
-
 public interface IPowerStatusMonitor
 {
     ValueTask<PowerStatusSnapshot> GetCurrentAsync(CancellationToken cancellationToken);

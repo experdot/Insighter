@@ -11,7 +11,6 @@ export const collectorIds = [
   'ForegroundWindowCollector',
   'IdleCollector',
   'ClipboardCollector',
-  'ProcessLifecycleCollector',
   'PowerCollector',
   'NetworkConnectivityCollector',
 ] as const
@@ -27,8 +26,6 @@ export const eventTypes = [
   'User.IdleStarted',
   'User.IdleEnded',
   'Clipboard.Changed',
-  'Process.Started',
-  'Process.Exited',
   'Power.SourceChanged',
   'Power.ChargingStateChanged',
   'Power.BatteryLevelChanged',
@@ -64,7 +61,6 @@ export const collectorTranslationKeys: Record<string, string> = {
   ForegroundWindowCollector: 'collectorNames.foregroundWindow',
   IdleCollector: 'collectorNames.idle',
   ClipboardCollector: 'collectorNames.clipboard',
-  ProcessLifecycleCollector: 'collectorNames.processLifecycle',
   PowerCollector: 'collectorNames.power',
   NetworkConnectivityCollector: 'collectorNames.networkConnectivity',
 }
@@ -80,8 +76,6 @@ export const eventTypeTranslationKeys: Record<string, string> = {
   'User.IdleStarted': 'eventTypes.userIdleStarted',
   'User.IdleEnded': 'eventTypes.userIdleEnded',
   'Clipboard.Changed': 'eventTypes.clipboardChanged',
-  'Process.Started': 'eventTypes.processStarted',
-  'Process.Exited': 'eventTypes.processExited',
   'Power.SourceChanged': 'eventTypes.powerSourceChanged',
   'Power.ChargingStateChanged': 'eventTypes.powerChargingStateChanged',
   'Power.BatteryLevelChanged': 'eventTypes.powerBatteryLevelChanged',

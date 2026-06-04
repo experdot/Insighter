@@ -44,81 +44,6 @@ public sealed class WindowsCollectorTests
     }
 
     [Fact]
-    public async Task ProcessLifecycleCollector_Filters_Noise_And_Computes_Duration()
-    {
-        var sink = new RecordingEventSink();
-        var clock = new ManualClock(DateTimeOffset.Parse("2026-01-01T00:00:00Z"));
-        var monitor = new TestProcessLifecycleMonitor();
-        var collector = new ProcessLifecycleCollector(
-            sink,
-            clock,
-            new TestMachineContextProvider(),
-            new TestUserSessionContextProvider(),
-            monitor,
-            NullLogger<ProcessLifecycleCollector>.Instance);
-
-        await collector.StartAsync(
-            new CollectorConfig(
-                CollectorIds.ProcessLifecycle,
-                true,
-                1,
-                clock.UtcNow,
-                JsonHelpers.Serialize(new
-                {
-                    captureExecutablePath = true,
-                    ignoreCurrentProcess = true,
-                    ignoreSystemProcesses = true,
-                })),
-            CancellationToken.None);
-        await Task.Delay(100);
-
-        monitor.Enqueue(new ProcessLifecycleNotification(
-            ProcessLifecycleEventKind.Started,
-            Environment.ProcessId,
-            "Insighter.Host",
-            1,
-            @"C:\Insighter\Insighter.Host.exe",
-            null));
-        monitor.Enqueue(new ProcessLifecycleNotification(
-            ProcessLifecycleEventKind.Started,
-            4,
-            "System",
-            null,
-            null,
-            null));
-        monitor.Enqueue(new ProcessLifecycleNotification(
-            ProcessLifecycleEventKind.Started,
-            100,
-            "notepad.exe",
-            50,
-            @"C:\Windows\System32\notepad.exe",
-            null));
-
-        var started = await sink.ReadAsync();
-        var startedData = GetData(started);
-        Assert.Equal(EventTypes.ProcessStarted, started.EventType);
-        Assert.Equal(100, startedData["processId"]?.GetValue<int>());
-
-        clock.Advance(TimeSpan.FromSeconds(5));
-        monitor.Enqueue(new ProcessLifecycleNotification(
-            ProcessLifecycleEventKind.Exited,
-            100,
-            "notepad.exe",
-            null,
-            null,
-            0));
-
-        var exited = await sink.ReadAsync();
-        var exitedData = GetData(exited);
-        Assert.Equal(EventTypes.ProcessExited, exited.EventType);
-        Assert.Equal(5000L, exitedData["durationMs"]?.GetValue<long>());
-        Assert.Equal(0, exitedData["exitCode"]?.GetValue<int>());
-        Assert.NotNull(exitedData["executablePathHash"]?.GetValue<string>());
-
-        await collector.StopAsync(CancellationToken.None);
-    }
-
-    [Fact]
     public async Task ForegroundWindowCollector_Redacts_Blacklisted_Process_And_Trims_Allowed_Titles()
     {
         var sink = new RecordingEventSink();
@@ -456,19 +381,6 @@ public sealed class WindowsCollectorTests
 
         public ValueTask<SystemLifecycleSignal> WaitForNextAsync(CancellationToken cancellationToken)
             => _signals.Reader.ReadAsync(cancellationToken);
-    }
-
-    private sealed class TestProcessLifecycleMonitor : IProcessLifecycleMonitor
-    {
-        private readonly Channel<ProcessLifecycleNotification> _notifications = Channel.CreateUnbounded<ProcessLifecycleNotification>();
-
-        public void Enqueue(ProcessLifecycleNotification notification)
-        {
-            _notifications.Writer.TryWrite(notification);
-        }
-
-        public ValueTask<ProcessLifecycleNotification> WaitForNextAsync(CancellationToken cancellationToken)
-            => _notifications.Reader.ReadAsync(cancellationToken);
     }
 
     private sealed class TestForegroundWindowMonitor : IForegroundWindowMonitor

@@ -54,7 +54,6 @@
     "foregroundWindow": "前台窗口",
     "idle": "空闲状态",
     "clipboard": "剪贴板",
-    "processLifecycle": "进程生命周期",
     "power": "电源",
     "networkConnectivity": "网络连通性"
   },
@@ -69,8 +68,6 @@
     "userIdleStarted": "用户开始空闲",
     "userIdleEnded": "用户结束空闲",
     "clipboardChanged": "剪贴板变化",
-    "processStarted": "进程启动",
-    "processExited": "进程退出",
     "powerSourceChanged": "电源来源变化",
     "powerChargingStateChanged": "充电状态变化",
     "powerBatteryLevelChanged": "电池电量变化",

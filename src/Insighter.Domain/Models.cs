@@ -9,7 +9,6 @@ public static class CollectorIds
     public const string ForegroundWindow = "ForegroundWindowCollector";
     public const string Idle = "IdleCollector";
     public const string Clipboard = "ClipboardCollector";
-    public const string ProcessLifecycle = "ProcessLifecycleCollector";
     public const string Power = "PowerCollector";
     public const string NetworkConnectivity = "NetworkConnectivityCollector";
 
@@ -20,7 +19,6 @@ public static class CollectorIds
         ForegroundWindow,
         Idle,
         Clipboard,
-        ProcessLifecycle,
         Power,
         NetworkConnectivity,
     ];
@@ -38,8 +36,6 @@ public static class EventTypes
     public const string UserIdleStarted = "User.IdleStarted";
     public const string UserIdleEnded = "User.IdleEnded";
     public const string ClipboardChanged = "Clipboard.Changed";
-    public const string ProcessStarted = "Process.Started";
-    public const string ProcessExited = "Process.Exited";
     public const string PowerSourceChanged = "Power.SourceChanged";
     public const string PowerChargingStateChanged = "Power.ChargingStateChanged";
     public const string PowerBatteryLevelChanged = "Power.BatteryLevelChanged";
@@ -132,14 +128,6 @@ public sealed record ClipboardSnapshot(
 
 public sealed record SystemLifecycleSignal(
     SystemLifecycleSignalKind Kind);
-
-public sealed record ProcessLifecycleNotification(
-    ProcessLifecycleEventKind Kind,
-    int ProcessId,
-    string ProcessName,
-    int? ParentProcessId,
-    string? ExecutablePath,
-    int? ExitCode);
 
 public sealed record PowerStatusSnapshot(
     PowerSourceKind PowerSource,

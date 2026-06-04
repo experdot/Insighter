@@ -16,7 +16,6 @@ public static class WindowsServiceCollectionExtensions
         services.TryAddSingleton<IIdleMonitor, WindowsIdleMonitor>();
         services.TryAddSingleton<ISessionStateMonitor, WindowsSessionStateMonitor>();
         services.TryAddSingleton<IClipboardMonitor, WindowsClipboardMonitor>();
-        services.TryAddSingleton<IProcessLifecycleMonitor, WindowsProcessLifecycleMonitor>();
         services.TryAddSingleton<INetworkConnectivityMonitor, WindowsNetworkConnectivityMonitor>();
 
         services.AddSingleton<ICollector, SystemLifecycleCollector>();
@@ -24,7 +23,6 @@ public static class WindowsServiceCollectionExtensions
         services.AddSingleton<ICollector, ForegroundWindowCollector>();
         services.AddSingleton<ICollector, IdleCollector>();
         services.AddSingleton<ICollector, ClipboardCollector>();
-        services.AddSingleton<ICollector, ProcessLifecycleCollector>();
         services.AddSingleton<ICollector, PowerCollector>();
         services.AddSingleton<ICollector, NetworkConnectivityCollector>();
         return services;
