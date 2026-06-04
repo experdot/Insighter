@@ -18,7 +18,9 @@ internal static class Program
             services.AddSingleton<IAgentPortResolver, AgentPortResolver>();
             services.AddSingleton<IAgentRuntimeStateStore, AgentRuntimeStateStore>();
             services.AddSingleton<IAgentBrowserLauncher, AgentBrowserLauncher>();
+            services.AddSingleton<IAgentOpenRequestStore, AgentOpenRequestStore>();
             services.AddSingleton<IAgentSingleInstanceCoordinator, AgentSingleInstanceCoordinator>();
+            services.AddSingleton<IAgentStartupTaskAccessor, AgentStartupTaskAccessor>();
             services.AddSingleton<IAgentStartupManager, AgentStartupManager>();
             services.AddSingleton<IAgentActivationInfo, AgentActivationInfo>();
             services.AddSingleton<IAgentHostRunner, AgentHostRunner>();
@@ -30,7 +32,11 @@ internal static class Program
             {
                 if (provider.GetRequiredService<IAgentActivationInfo>().ShouldOpenUiOnLaunch(args))
                 {
-                    await instanceCoordinator.SignalOpenUiAsync(CancellationToken.None);
+                    var wasDelivered = await instanceCoordinator.SignalOpenUiAsync(CancellationToken.None);
+                    if (!wasDelivered)
+                    {
+                        provider.GetRequiredService<IAgentOpenRequestStore>().MarkPending();
+                    }
                 }
 
                 return;

@@ -19,6 +19,8 @@ internal static class AgentPaths
 
     public static string RuntimeStatePath => Path.Combine(StateDirectory, "agent-state.json");
 
+    public static string PendingOpenUiPath => Path.Combine(StateDirectory, "open-ui.pending");
+
     public static string RootOverrideEnvironmentVariableName => RootOverrideEnvironmentVariable;
 
     public static void EnsureDirectories()

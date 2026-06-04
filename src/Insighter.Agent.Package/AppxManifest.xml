@@ -36,8 +36,7 @@
         Description="Local-first observability desk for personal system activity."
         BackgroundColor="transparent"
         Square44x44Logo="Assets\Square44x44Logo.png"
-        Square150x150Logo="Assets\Square150x150Logo.png"
-        AppListEntry="none">
+        Square150x150Logo="Assets\Square150x150Logo.png">
         <uap:DefaultTile Wide310x150Logo="Assets\Wide310x150Logo.png" />
       </uap:VisualElements>
       <Extensions>

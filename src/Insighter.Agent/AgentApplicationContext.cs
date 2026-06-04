@@ -10,18 +10,23 @@ internal sealed class AgentApplicationContext : ApplicationContext
     private readonly IAgentHostRunner _hostRunner;
     private readonly IAgentSingleInstanceCoordinator _instanceCoordinator;
     private readonly IAgentBrowserLauncher _browserLauncher;
+    private readonly IAgentOpenRequestStore _openRequestStore;
     private readonly IAgentRuntimeStateStore _runtimeStateStore;
     private readonly IAgentStartupManager _startupManager;
     private readonly IAgentActivationInfo _activationInfo;
     private readonly NotifyIcon _notifyIcon;
     private readonly ToolStripMenuItem _openInsighterMenuItem;
     private readonly ToolStripMenuItem _launchAtLoginMenuItem;
+    private readonly Control _uiDispatcher;
     private readonly System.Windows.Forms.Timer _startupTimer;
+    private readonly System.Windows.Forms.Timer _pendingOpenRequestTimer;
     private readonly CancellationTokenSource _lifetimeCts = new();
     private readonly string[] _args;
     private readonly Icon _trayIcon;
+    private Task? _commandServerTask;
     private bool _isInitialized;
     private bool _isShuttingDown;
+    private bool _pendingOpenUi;
 
     public AgentApplicationContext(IServiceProvider services, string[] args)
     {
@@ -29,6 +34,7 @@ internal sealed class AgentApplicationContext : ApplicationContext
         _hostRunner = services.GetRequiredService<IAgentHostRunner>();
         _instanceCoordinator = services.GetRequiredService<IAgentSingleInstanceCoordinator>();
         _browserLauncher = services.GetRequiredService<IAgentBrowserLauncher>();
+        _openRequestStore = services.GetRequiredService<IAgentOpenRequestStore>();
         _runtimeStateStore = services.GetRequiredService<IAgentRuntimeStateStore>();
         _startupManager = services.GetRequiredService<IAgentStartupManager>();
         _activationInfo = services.GetRequiredService<IAgentActivationInfo>();
@@ -38,7 +44,7 @@ internal sealed class AgentApplicationContext : ApplicationContext
         {
             Enabled = false,
         };
-        _launchAtLoginMenuItem = new ToolStripMenuItem("Launch at login")
+        _launchAtLoginMenuItem = new ToolStripMenuItem("Launch at login (MSIX only)")
         {
             CheckOnClick = false,
             Enabled = false,
@@ -60,6 +66,8 @@ internal sealed class AgentApplicationContext : ApplicationContext
             Icon = _trayIcon,
         };
         _notifyIcon.DoubleClick += (_, _) => _ = OpenUiAsync();
+        _uiDispatcher = new Control();
+        _ = _uiDispatcher.Handle;
 
         _startupTimer = new System.Windows.Forms.Timer
         {
@@ -67,14 +75,25 @@ internal sealed class AgentApplicationContext : ApplicationContext
             Enabled = true,
         };
         _startupTimer.Tick += OnStartupTimerTick;
+
+        _pendingOpenRequestTimer = new System.Windows.Forms.Timer
+        {
+            Interval = 1000,
+            Enabled = true,
+        };
+        _pendingOpenRequestTimer.Tick += OnPendingOpenRequestTimerTick;
+
+        _commandServerTask = Task.Run(() => _instanceCoordinator.RunServerAsync(HandleCommandAsync, _lifetimeCts.Token));
     }
 
-    private async Task HandleCommandAsync(string command, CancellationToken cancellationToken)
+    private Task HandleCommandAsync(string command, CancellationToken cancellationToken)
     {
         if (string.Equals(command, AgentConstants.OpenUiCommand, StringComparison.OrdinalIgnoreCase))
         {
-            _notifyIcon.ContextMenuStrip?.BeginInvoke(new Action(() => _ = OpenUiAsync()));
+            BeginInvokeOnUiThread(RequestOpenUi);
         }
+
+        return Task.CompletedTask;
     }
 
     private async Task OpenUiAsync()
@@ -96,6 +115,28 @@ internal sealed class AgentApplicationContext : ApplicationContext
         }
     }
 
+    private void RequestOpenUi()
+    {
+        _pendingOpenUi = true;
+
+        if (_isInitialized)
+        {
+            _ = OpenPendingUiAsync();
+        }
+    }
+
+    private async Task OpenPendingUiAsync()
+    {
+        if (!_isInitialized || !_pendingOpenUi)
+        {
+            return;
+        }
+
+        _pendingOpenUi = false;
+        _openRequestStore.Clear();
+        await OpenUiAsync();
+    }
+
     private async void OnStartupTimerTick(object? sender, EventArgs e)
     {
         _startupTimer.Stop();
@@ -103,17 +144,15 @@ internal sealed class AgentApplicationContext : ApplicationContext
 
         try
         {
+            _pendingOpenUi = _activationInfo.ShouldOpenUiOnLaunch(_args);
+            _pendingOpenUi |= _openRequestStore.ConsumePending();
+
             await _hostRunner.StartAsync(_lifetimeCts.Token);
-            _ = Task.Run(() => _instanceCoordinator.RunServerAsync(HandleCommandAsync, _lifetimeCts.Token));
             await RefreshStartupMenuStateAsync();
             _notifyIcon.Visible = true;
             _openInsighterMenuItem.Enabled = true;
             _isInitialized = true;
-
-            if (_activationInfo.ShouldOpenUiOnLaunch(_args))
-            {
-                _ = OpenUiAsync();
-            }
+            await OpenPendingUiAsync();
         }
         catch (Exception exception)
         {
@@ -132,6 +171,14 @@ internal sealed class AgentApplicationContext : ApplicationContext
         }
     }
 
+    private void OnPendingOpenRequestTimerTick(object? sender, EventArgs e)
+    {
+        if (_openRequestStore.ConsumePending())
+        {
+            RequestOpenUi();
+        }
+    }
+
     private static void OpenDataFolder()
     {
         AgentPaths.EnsureDirectories();
@@ -145,13 +192,13 @@ internal sealed class AgentApplicationContext : ApplicationContext
     private async Task ToggleStartupAsync()
     {
         var state = await _startupManager.GetStateAsync();
-        if (state is null)
+        if (!state.IsAvailable || state.IsPolicyManaged)
         {
             await RefreshStartupMenuStateAsync();
             return;
         }
 
-        if (state is StartupTaskState.Enabled or StartupTaskState.EnabledByPolicy)
+        if (state.IsEnabled)
         {
             await _startupManager.DisableAsync();
         }
@@ -166,8 +213,9 @@ internal sealed class AgentApplicationContext : ApplicationContext
     private async Task RefreshStartupMenuStateAsync()
     {
         var state = await _startupManager.GetStateAsync();
-        _launchAtLoginMenuItem.Checked = state is StartupTaskState.Enabled or StartupTaskState.EnabledByPolicy;
-        _launchAtLoginMenuItem.Enabled = state is not StartupTaskState.EnabledByPolicy;
+        _launchAtLoginMenuItem.Text = state.IsAvailable ? "Launch at login" : "Launch at login (MSIX only)";
+        _launchAtLoginMenuItem.Checked = state.IsEnabled;
+        _launchAtLoginMenuItem.Enabled = state.IsAvailable && !state.IsPolicyManaged;
     }
 
     private static Icon LoadTrayIcon()
@@ -195,16 +243,39 @@ internal sealed class AgentApplicationContext : ApplicationContext
         try
         {
             await _hostRunner.StopAsync(CancellationToken.None);
+            if (_commandServerTask is not null)
+            {
+                await _commandServerTask;
+            }
+
             await _instanceCoordinator.DisposeAsync();
         }
         finally
         {
             _startupTimer.Dispose();
+            _pendingOpenRequestTimer.Dispose();
             _notifyIcon.Dispose();
+            _uiDispatcher.Dispose();
             _trayIcon.Dispose();
             _lifetimeCts.Dispose();
             ExitThread();
         }
+    }
+
+    private void BeginInvokeOnUiThread(Action action)
+    {
+        if (_uiDispatcher.IsDisposed)
+        {
+            return;
+        }
+
+        if (_uiDispatcher.InvokeRequired)
+        {
+            _uiDispatcher.BeginInvoke(action);
+            return;
+        }
+
+        action();
     }
 
     protected override void Dispose(bool disposing)

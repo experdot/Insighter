@@ -9,7 +9,7 @@ internal interface IAgentSingleInstanceCoordinator : IAsyncDisposable
 
     Task<bool> TryAcquirePrimaryInstanceAsync(CancellationToken cancellationToken);
 
-    Task SignalOpenUiAsync(CancellationToken cancellationToken);
+    Task<bool> SignalOpenUiAsync(CancellationToken cancellationToken);
 
     Task RunServerAsync(Func<string, CancellationToken, Task> onCommandAsync, CancellationToken cancellationToken);
 }
@@ -28,7 +28,7 @@ internal sealed class AgentSingleInstanceCoordinator : IAgentSingleInstanceCoord
         return Task.FromResult(createdNew);
     }
 
-    public async Task SignalOpenUiAsync(CancellationToken cancellationToken)
+    public async Task<bool> SignalOpenUiAsync(CancellationToken cancellationToken)
     {
         try
         {
@@ -42,12 +42,15 @@ internal sealed class AgentSingleInstanceCoordinator : IAgentSingleInstanceCoord
             var payload = Encoding.UTF8.GetBytes(AgentConstants.OpenUiCommand);
             await client.WriteAsync(payload, cancellationToken);
             await client.FlushAsync(cancellationToken);
+            return true;
         }
         catch (TimeoutException)
         {
+            return false;
         }
         catch (IOException)
         {
+            return false;
         }
     }
 
@@ -75,6 +78,9 @@ internal sealed class AgentSingleInstanceCoordinator : IAgentSingleInstanceCoord
             catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
             {
                 break;
+            }
+            catch (IOException)
+            {
             }
         }
     }

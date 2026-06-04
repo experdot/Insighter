@@ -1,50 +1,55 @@
-using Windows.ApplicationModel;
-
 namespace Insighter.Agent;
 
 internal interface IAgentStartupManager
 {
-    Task<StartupTaskState?> GetStateAsync();
+    Task<AgentStartupRegistrationState> GetStateAsync();
 
-    Task<StartupTaskState?> EnableAsync();
+    Task<AgentStartupRegistrationState> EnableAsync();
 
-    Task DisableAsync();
+    Task<AgentStartupRegistrationState> DisableAsync();
 }
 
 internal sealed class AgentStartupManager : IAgentStartupManager
 {
-    public async Task<StartupTaskState?> GetStateAsync()
+    private readonly IAgentStartupTaskAccessor _taskAccessor;
+
+    public AgentStartupManager(IAgentStartupTaskAccessor taskAccessor)
     {
-        var task = await TryGetTaskAsync();
-        return task?.State;
+        _taskAccessor = taskAccessor;
     }
 
-    public async Task<StartupTaskState?> EnableAsync()
+    public async Task<AgentStartupRegistrationState> GetStateAsync()
     {
-        var task = await TryGetTaskAsync();
+        var task = await _taskAccessor.TryGetTaskAsync();
+        return CreateState(task);
+    }
+
+    public async Task<AgentStartupRegistrationState> EnableAsync()
+    {
+        var task = await _taskAccessor.TryGetTaskAsync();
         if (task is null)
         {
-            return null;
+            return AgentStartupRegistrationState.Unavailable;
         }
 
-        return await task.RequestEnableAsync();
+        var state = await task.RequestEnableAsync();
+        return new AgentStartupRegistrationState(true, state);
     }
 
-    public async Task DisableAsync()
+    public async Task<AgentStartupRegistrationState> DisableAsync()
     {
-        var task = await TryGetTaskAsync();
-        task?.Disable();
+        var task = await _taskAccessor.TryGetTaskAsync();
+        if (task is null)
+        {
+            return AgentStartupRegistrationState.Unavailable;
+        }
+
+        task.Disable();
+        return CreateState(task);
     }
 
-    private static async Task<StartupTask?> TryGetTaskAsync()
-    {
-        try
-        {
-            return await StartupTask.GetAsync(AgentConstants.StartupTaskId);
-        }
-        catch
-        {
-            return null;
-        }
-    }
+    private static AgentStartupRegistrationState CreateState(IAgentStartupTask? task) =>
+        task is null
+            ? AgentStartupRegistrationState.Unavailable
+            : new AgentStartupRegistrationState(true, task.State);
 }
