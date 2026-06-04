@@ -2,7 +2,7 @@
 
 [中文说明](./README.zh-CN.md)
 
-Insighter is a local-first observability desk for personal system activity. It runs on your machine, collects a small set of structured system events, stores them in SQLite, exposes a local HTTP API, and ships with a web dashboard for search, configuration, and health monitoring.
+Insighter is a local-first observability desk for personal system activity. It runs on your machine, collects a small set of structured system events, stores them in SQLite, exposes a local HTTP API, and ships with a web dashboard for search, configuration, and health monitoring. It is also AI-ready: the host now exposes a local GraphQL log query surface plus bundled PowerShell wrappers and a Codex skill for agent-driven exploration.
 
 ## Status
 
@@ -13,6 +13,8 @@ This repository already includes a working v1:
 - Seven Windows platform collectors
 - React + TypeScript frontend
 - Dashboard, Logs, Collectors, and Settings pages
+- GraphQL AI query endpoint with controlled query input
+- Bundled PowerShell wrappers and Codex skill for log exploration
 - English and Simplified Chinese UI
 
 Current platform implementation is Windows-first. The host project targets `net8.0-windows`.
@@ -45,6 +47,7 @@ It also supports:
 - Collector config updates
 - Dashboard aggregation
 - Log filtering and pagination
+- AI-ready log querying through GraphQL and PowerShell wrappers
 - Local settings management
 - Privacy-oriented redaction defaults
 
@@ -68,6 +71,17 @@ Platform notes:
 - `Logs`: structured log search, filters, pagination, detail dialog
 - `Collectors`: runtime status, platform support, start / stop, config sheet
 - `Settings`: retention and privacy defaults, read-only host info
+
+## AI Ready
+
+Insighter now has a local AI query layer designed for agents and automation:
+
+- `POST /graphql` exposes a controlled `aiQuery(input: AiLogQueryRequestInput!)` entry point.
+- Query results support row search, grouped summaries, and anchor-based before / after context.
+- Repository-bundled PowerShell wrappers hide GraphQL transport details and emit stable JSON.
+- A reusable Codex skill, `insighter-log-explorer`, lets AI agents explore logs without writing raw `curl` or ad-hoc HTTP code.
+
+For most AI workflows, prefer the bundled wrappers and skill over handwritten requests.
 
 ## Architecture
 
@@ -141,11 +155,28 @@ Main local endpoints:
 - `GET /api/platform/capabilities`
 - `GET /api/settings`
 - `PUT /api/settings`
+- `POST /graphql`
 
 Default local API URL:
 
 ```text
 http://127.0.0.1:5078
+```
+
+GraphQL AI query entry point:
+
+```graphql
+query InsighterAiQuery($input: AiLogQueryRequestInput!) {
+  aiQuery(input: $input) {
+    mode
+    meta { fromUtc toUtc totalMatched returnedCount contentIncluded warnings }
+    items { id occurredAtUtc eventType collectorId severity userSessionId machineId platform fields { name value } contentJson }
+    groups { key { name value } count firstOccurredAtUtc lastOccurredAtUtc }
+    anchor { id occurredAtUtc eventType collectorId severity userSessionId machineId platform fields { name value } contentJson }
+    before { id occurredAtUtc eventType collectorId severity userSessionId machineId platform fields { name value } contentJson }
+    after { id occurredAtUtc eventType collectorId severity userSessionId machineId platform fields { name value } contentJson }
+  }
+}
 ```
 
 ## Quick Start
@@ -203,6 +234,69 @@ Open:
 - Local API / host: `http://127.0.0.1:5078`
 
 The Vite dev server proxies `/api` requests to the local host.
+
+## Install the Codex Skill
+
+The repository includes a Codex skill at [`.codex/skills/insighter-log-explorer`](./.codex/skills/insighter-log-explorer/SKILL.md).
+
+Install it into your global Codex skills directory with:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts/install-insighter-codex-skill.ps1
+```
+
+Default install target:
+
+- `%CODEX_HOME%\skills\insighter-log-explorer`
+- Fallback: `%USERPROFILE%\.codex\skills\insighter-log-explorer`
+
+Install to a custom target root with:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts/install-insighter-codex-skill.ps1 -TargetRoot C:\path\to\skills
+```
+
+The installer validates the skill before copying it.
+
+## Use the AI Wrappers
+
+When querying logs from PowerShell or an AI agent, prefer the repository wrappers in [`.codex/skills/insighter-log-explorer/scripts`](./.codex/skills/insighter-log-explorer/scripts).
+
+Use the `.cmd` shims on Windows when execution policy blocks direct `.ps1` invocation:
+
+```powershell
+.\.codex\skills\insighter-log-explorer\scripts\Group-InsighterLogs.cmd `
+  -BaseUrl http://127.0.0.1:5078 `
+  -TimeBucket hour `
+  -GroupBy eventType `
+  -Limit 24
+```
+
+```powershell
+.\.codex\skills\insighter-log-explorer\scripts\Search-InsighterLogs.cmd `
+  -BaseUrl http://127.0.0.1:5078 `
+  -EventType Window.Activated `
+  -Field data.processName `
+  -Operator contains `
+  -Value code `
+  -Limit 20
+```
+
+```powershell
+.\.codex\skills\insighter-log-explorer\scripts\Get-InsighterLogContext.cmd `
+  -BaseUrl http://127.0.0.1:5078 `
+  -AnchorEventId 11111111-2222-3333-4444-555555555555 `
+  -BeforeCount 8 `
+  -AfterCount 8
+```
+
+Wrapper guidance:
+
+- Start with `Group-InsighterLogs` to measure volume and hotspots.
+- Use `Search-InsighterLogs` to narrow the candidate events.
+- Use `Get-InsighterLogContext` to inspect surrounding activity.
+- Use `Invoke-InsighterAiQuery.ps1` only when the friendly wrappers are too narrow.
+- Keep time ranges narrow and treat window titles or clipboard content as sensitive.
 
 ## Build Frontend for Host Serving
 
@@ -280,7 +374,7 @@ You should still review settings before using it on real personal or work device
 Planned / reserved architecture areas include:
 
 - richer dashboard aggregations
-- AI-assisted log analysis through controlled function boundaries
+- richer AI-assisted log analysis on top of the existing controlled GraphQL query surface
 - macOS and Linux platform adapters
 - broader observability and privacy controls
 

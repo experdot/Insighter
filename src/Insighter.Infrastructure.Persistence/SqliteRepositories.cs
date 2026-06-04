@@ -72,7 +72,7 @@ public sealed class SqliteLogEventRepository : ILogEventRepository
                 FROM LogEvents
                 WHERE Id = @Id;
                 """,
-                new { Id = id },
+                new { Id = id.ToString() },
                 cancellationToken: cancellationToken));
 
         return row is null ? null : ToDomain(row);

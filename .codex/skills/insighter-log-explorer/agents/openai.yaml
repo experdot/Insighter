@@ -1,0 +1,4 @@
+interface:
+  display_name: "Insighter Log Explorer"
+  short_description: "Explore Insighter logs with GraphQL wrappers."
+  default_prompt: "Use -log-explorer to inspect local Insighter logs through the bundled GraphQL PowerShell wrappers."

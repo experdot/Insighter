@@ -2,7 +2,7 @@
 
 [English](./README.md)
 
-Insighter 是一个本地优先的个人系统行为观测工作台。它运行在你的电脑上，采集一小组结构化系统事件，存储到 SQLite，通过本地 HTTP API 对外提供访问，并带有一套 Web 前端用于检索、配置和健康状态查看。
+Insighter 是一个本地优先的个人系统行为观测工作台。它运行在你的电脑上，采集一小组结构化系统事件，存储到 SQLite，通过本地 HTTP API 对外提供访问，并带有一套 Web 前端用于检索、配置和健康状态查看。现在它也已经具备 AI Ready 能力：宿主暴露了本地 GraphQL 日志查询入口，并随仓库提供 PowerShell 封装脚本和 Agent skill，方便 AI agent 直接探索日志。
 
 ## 当前状态
 
@@ -13,6 +13,8 @@ Insighter 是一个本地优先的个人系统行为观测工作台。它运行�
 - 7 个 Windows 平台采集器
 - React + TypeScript 前端
 - `Dashboard`、`Logs`、`Collectors`、`Settings` 四个页面
+- 基于 GraphQL 的 AI 查询入口和受控查询输入
+- 面向日志探索的 PowerShell 包装脚本与 Agent skill
 - 中英文双语界面
 
 当前平台实现以 Windows 为主，宿主项目目标框架为 `net8.0-windows`。
@@ -45,6 +47,7 @@ Insighter 目前采集以下事件类型：
 - 采集器配置更新
 - Dashboard 聚合分析
 - 日志过滤与分页
+- 通过 GraphQL 和 PowerShell 封装实现 AI Ready 日志查询
 - 本地设置管理
 - 面向隐私的默认脱敏策略
 
@@ -68,6 +71,17 @@ Insighter 目前采集以下事件类型：
 - `Logs`：结构化日志检索、筛选、分页、详情查看
 - `Collectors`：运行状态、平台能力、启停控制、配置面板
 - `Settings`：保留策略与隐私默认值、只读宿主信息
+
+## AI Ready
+
+Insighter 现在提供了一套面向 AI agent 和自动化脚本的本地查询能力：
+
+- 通过 `POST /graphql` 暴露受控的 `aiQuery(input: AiLogQueryRequestInput!)` 入口。
+- 查询结果支持行级检索、分组汇总、以及基于锚点事件的前后文查询。
+- 仓库内置的 PowerShell 封装隐藏了 GraphQL 传输细节，并输出稳定 JSON。
+- 可复用的 Codex skill `insighter-log-explorer` 让 AI 不必手写 `curl` 或临时 HTTP 请求。
+
+对大多数 AI 场景，优先使用 skill 和封装脚本，而不是手写请求。
 
 ## 架构概览
 
@@ -141,11 +155,28 @@ web/
 - `GET /api/platform/capabilities`
 - `GET /api/settings`
 - `PUT /api/settings`
+- `POST /graphql`
 
 默认本地 API 地址：
 
 ```text
 http://127.0.0.1:5078
+```
+
+GraphQL AI 查询入口：
+
+```graphql
+query InsighterAiQuery($input: AiLogQueryRequestInput!) {
+  aiQuery(input: $input) {
+    mode
+    meta { fromUtc toUtc totalMatched returnedCount contentIncluded warnings }
+    items { id occurredAtUtc eventType collectorId severity userSessionId machineId platform fields { name value } contentJson }
+    groups { key { name value } count firstOccurredAtUtc lastOccurredAtUtc }
+    anchor { id occurredAtUtc eventType collectorId severity userSessionId machineId platform fields { name value } contentJson }
+    before { id occurredAtUtc eventType collectorId severity userSessionId machineId platform fields { name value } contentJson }
+    after { id occurredAtUtc eventType collectorId severity userSessionId machineId platform fields { name value } contentJson }
+  }
+}
 ```
 
 ## 快速开始
@@ -203,6 +234,41 @@ pnpm dev
 - 本地 API / 宿主：`http://127.0.0.1:5078`
 
 Vite 开发服务器会将 `/api` 请求代理到本地宿主。
+
+## 安装 Codex Skill
+
+仓库内已经包含 skill，路径是 [`.codex/skills/insighter-log-explorer`](./.codex/skills/insighter-log-explorer/SKILL.md)。
+
+安装到全局 Codex skills 目录：
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts/install-insighter-codex-skill.ps1
+```
+
+默认安装位置：
+
+- `%CODEX_HOME%\skills\insighter-log-explorer`
+- 回退位置：`%USERPROFILE%\.codex\skills\insighter-log-explorer`
+
+安装到自定义目录：
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts/install-insighter-codex-skill.ps1 -TargetRoot C:\path\to\skills
+```
+
+安装脚本会在复制前先校验 skill 结构。
+
+## 使用 AI 查询封装脚本
+
+当你在 PowerShell 或 AI agent 里查询日志时，优先使用 [`.codex/skills/insighter-log-explorer/scripts`](./.codex/skills/insighter-log-explorer/scripts) 里的封装脚本。
+
+建议用法：
+
+- 先用 `Group-InsighterLogs` 看时间段、事件类型或进程级别的热点。
+- 再用 `Search-InsighterLogs` 缩小到候选事件。
+- 最后用 `Get-InsighterLogContext` 拉取目标事件前后文。
+- 只有在友好封装不够用时，才使用 `Invoke-InsighterAiQuery.ps1`。
+- 时间范围尽量收窄，并把窗口标题、剪贴板内容视为敏感信息。
 
 ## 构建前端并交给 Host 托管
 
@@ -280,7 +346,7 @@ Insighter 是本地优先产品，但它依然会处理敏感行为数据。v1 �
 当前架构已经为以下方向预留空间：
 
 - 更丰富的 Dashboard 聚合分析
-- 通过受控 Function Call 边界实现 AI 日志分析
+- 在现有受控 GraphQL 查询面的基础上继续增强 AI 日志分析
 - macOS 与 Linux 平台适配层
 - 更完整的观测与隐私控制能力
 

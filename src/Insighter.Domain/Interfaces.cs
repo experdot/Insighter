@@ -100,12 +100,7 @@ public interface ILogAggregationService
 
 public interface IAiLogQueryService
 {
-    Task<IReadOnlyList<LogEvent>> SearchLogsAsync(
-        DateTimeOffset fromUtc,
-        DateTimeOffset toUtc,
-        int maxResults,
-        string? eventType,
-        CancellationToken cancellationToken);
+    Task<AiLogQueryResult> ExecuteAsync(AiLogQueryRequest request, CancellationToken cancellationToken);
 }
 
 public interface ISettingsService

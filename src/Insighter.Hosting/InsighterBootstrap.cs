@@ -38,7 +38,7 @@ public static class InsighterBootstrap
             ? options.DatabasePath
             : !string.IsNullOrWhiteSpace(startupOptions.DatabasePath)
                 ? startupOptions.DatabasePath
-                : Path.Combine(
+                : System.IO.Path.Combine(
                     Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
                     "Insighter",
                     "data",
@@ -52,6 +52,10 @@ public static class InsighterBootstrap
         builder.Services.AddInsighterPersistence(databasePath);
         builder.Services.AddInsighterApplication();
         builder.Services.AddInsighterWindowsPlatform();
+        builder.Services
+            .AddGraphQLServer()
+            .AddQueryType<AiLogQueryOperations>()
+            .AddErrorFilter<GraphQlApiExceptionErrorFilter>();
 
         var app = builder.Build();
         options.ConfigureApp?.Invoke(app);
@@ -100,8 +104,8 @@ public static class InsighterBootstrap
 
     private static void ConfigureRoutes(WebApplication app)
     {
-        var spaIndexPath = Path.Combine(
-            app.Environment.WebRootPath ?? Path.Combine(app.Environment.ContentRootPath, "wwwroot"),
+        var spaIndexPath = System.IO.Path.Combine(
+            app.Environment.WebRootPath ?? System.IO.Path.Combine(app.Environment.ContentRootPath, "wwwroot"),
             "index.html");
 
         app.MapGet("/api/meta", () => Results.Ok(new
@@ -235,6 +239,8 @@ public static class InsighterBootstrap
             var settings = await service.UpdateAsync(updates, cancellationToken);
             return Results.Ok(ToSettingsResponse(settings));
         });
+
+        app.MapGraphQL("/graphql");
 
         app.MapFallback(async context =>
         {

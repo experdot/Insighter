@@ -128,6 +128,119 @@ public sealed class ApplicationTests
         Assert.Equal(true, networkSettings["reportActiveNetworkChanges"]?.GetValue<bool>());
     }
 
+    [Fact]
+    public async Task AiLogQueryService_Searches_Filtered_Rows()
+    {
+        var now = DateTimeOffset.Parse("2026-06-04T00:00:00Z");
+        var repository = new InMemoryLogEventRepository(
+        [
+            new LogEvent(Guid.NewGuid(), now.AddMinutes(-30), EventTypes.WindowActivated, CollectorIds.ForegroundWindow, EventSeverity.Information, "1", "m", """{"schemaVersion":1,"platform":"windows","data":{"processName":"Code","windowTitle":"Repo"}}"""),
+            new LogEvent(Guid.NewGuid(), now.AddMinutes(-20), EventTypes.WindowActivated, CollectorIds.ForegroundWindow, EventSeverity.Information, "1", "m", """{"schemaVersion":1,"platform":"windows","data":{"processName":"Notepad","windowTitle":"Todo"}}"""),
+        ]);
+
+        var service = new AiLogQueryService(repository, new ManualClock(now));
+        var result = await service.ExecuteAsync(
+            new AiLogQueryRequest
+            {
+                Filters =
+                [
+                    new AiLogQueryFilter
+                    {
+                        Field = "data.processName",
+                        Operator = "contains",
+                        Value = "code",
+                    },
+                ],
+            },
+            CancellationToken.None);
+
+        Assert.Equal("ROWS", result.Mode);
+        Assert.Single(result.Items);
+        Assert.Equal("Window.Activated", result.Items[0].EventType);
+        Assert.Contains(result.Items[0].Fields, x => x.Name == "data.processName" && x.Value == "Code");
+    }
+
+    [Fact]
+    public async Task AiLogQueryService_Groups_By_TimeBucket_And_Field()
+    {
+        var now = DateTimeOffset.Parse("2026-06-04T00:00:00Z");
+        var repository = new InMemoryLogEventRepository(
+        [
+            new LogEvent(Guid.NewGuid(), now.AddMinutes(-50), EventTypes.WindowActivated, CollectorIds.ForegroundWindow, EventSeverity.Information, "1", "m", """{"schemaVersion":1,"platform":"windows","data":{"processName":"Code"}}"""),
+            new LogEvent(Guid.NewGuid(), now.AddMinutes(-40), EventTypes.WindowActivated, CollectorIds.ForegroundWindow, EventSeverity.Information, "1", "m", """{"schemaVersion":1,"platform":"windows","data":{"processName":"Code"}}"""),
+            new LogEvent(Guid.NewGuid(), now.AddMinutes(-10), EventTypes.WindowActivated, CollectorIds.ForegroundWindow, EventSeverity.Information, "1", "m", """{"schemaVersion":1,"platform":"windows","data":{"processName":"Notepad"}}"""),
+        ]);
+
+        var service = new AiLogQueryService(repository, new ManualClock(now));
+        var result = await service.ExecuteAsync(
+            new AiLogQueryRequest
+            {
+                GroupBy = ["data.processName"],
+                TimeBucket = "hour",
+            },
+            CancellationToken.None);
+
+        Assert.Equal("GROUPS", result.Mode);
+        Assert.Equal(2, result.Groups.Count);
+        Assert.Contains(result.Groups, x => x.Count == 2 && x.Key.Any(k => k.Name == "data.processName" && k.Value == "Code"));
+        Assert.All(result.Groups, x => Assert.Contains(x.Key, key => key.Name == "timeBucketStart"));
+    }
+
+    [Fact]
+    public async Task AiLogQueryService_Returns_Context_Around_Anchor()
+    {
+        var anchorId = Guid.NewGuid();
+        var now = DateTimeOffset.Parse("2026-06-04T00:00:00Z");
+        var repository = new InMemoryLogEventRepository(
+        [
+            new LogEvent(Guid.NewGuid(), now.AddMinutes(-3), EventTypes.SystemStartup, CollectorIds.SystemLifecycle, EventSeverity.Information, "1", "m", """{"schemaVersion":1,"platform":"windows","data":{"source":"start"}}"""),
+            new LogEvent(anchorId, now.AddMinutes(-2), EventTypes.WindowActivated, CollectorIds.ForegroundWindow, EventSeverity.Information, "1", "m", """{"schemaVersion":1,"platform":"windows","data":{"processName":"Code"}}"""),
+            new LogEvent(Guid.NewGuid(), now.AddMinutes(-1), EventTypes.ClipboardChanged, CollectorIds.Clipboard, EventSeverity.Information, "1", "m", """{"schemaVersion":1,"platform":"windows","data":{"captureMode":"Preview"}}"""),
+        ]);
+
+        var service = new AiLogQueryService(repository, new ManualClock(now));
+        var result = await service.ExecuteAsync(
+            new AiLogQueryRequest
+            {
+                Context = new AiLogQueryContext
+                {
+                    AnchorEventId = anchorId,
+                    BeforeCount = 1,
+                    AfterCount = 1,
+                },
+            },
+            CancellationToken.None);
+
+        Assert.Equal("CONTEXT", result.Mode);
+        Assert.NotNull(result.Anchor);
+        Assert.Single(result.Before);
+        Assert.Single(result.After);
+        Assert.Equal(anchorId, result.Anchor!.Id);
+    }
+
+    [Fact]
+    public async Task AiLogQueryService_Rejects_Invalid_Field()
+    {
+        var service = new AiLogQueryService(new InMemoryLogEventRepository([]), new ManualClock(DateTimeOffset.UtcNow));
+
+        var exception = await Assert.ThrowsAsync<ApiException>(() => service.ExecuteAsync(
+            new AiLogQueryRequest
+            {
+                Filters =
+                [
+                    new AiLogQueryFilter
+                    {
+                        Field = "content.data.processName",
+                        Operator = "eq",
+                        Value = "Code",
+                    },
+                ],
+            },
+            CancellationToken.None));
+
+        Assert.Equal("invalid_ai_query_field", exception.Code);
+    }
+
     private sealed class InMemoryAppSettingsRepository : IAppSettingsRepository
     {
         public InMemoryAppSettingsRepository(Dictionary<string, string> values)
